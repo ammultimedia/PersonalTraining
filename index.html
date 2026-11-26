@@ -1,0 +1,116 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>دراسة NASM-CPT</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: calm personal study shelf.
+IDEA: a textbook's table of contents, each chapter a tab with its parts and its quiz.
+PICTURE: the chapter list itself, with progress shown as filled chapters.
+COLOUR and TYPE: the deep muscle red used in all study files; Noto Naskh Arabic + Source Sans 3.
+LAYOUT: header, extras row, chapter list, future chapters greyed.
+*/
+:root{color-scheme:light dark;--bg:light-dark(#fff,#141312);--ink:light-dark(#1d1a19,#efe9e4);--mute:light-dark(#655c57,#b4aaa4);
+--red:light-dark(#8c2f25,#5a1d17);--plate:light-dark(#f6f2ef,#1f1b19);--line:light-dark(#e2dad5,#3a3431);--yel:#f2c230;--grn:#2f7a34}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 "Noto Naskh Arabic","Source Sans 3",serif;overflow-x:clip}
+.en{font-family:"Source Sans 3",system-ui,sans-serif}
+.wrap{max-width:980px;margin:0 auto}.band{padding:clamp(22px,4vw,48px) max(5vw,16px)}
+header{background:var(--red);color:#fff;padding-bottom:28px}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.15;margin:0}
+h1 span{display:block;font-size:.4em;opacity:.85;margin-top:6px;font-family:"Source Sans 3",sans-serif}
+.lead{margin:12px 0 0;max-width:60ch;opacity:.92}
+.prog{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.prog i{width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.18);display:grid;place-items:center;font:700 12px "Source Sans 3",sans-serif;font-style:normal}
+.prog i.on{background:var(--yel);color:#2a2200}
+h2{font-size:24px;margin:0 0 12px}
+.extras{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:10px}
+.card{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--bg)}
+.card h3{margin:0 0 6px;font-size:19px;line-height:1.35}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+a.btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 14px;border-radius:10px;text-decoration:none;font-size:15.5px;line-height:1.3;background:var(--plate);color:var(--ink)}
+a.btn:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+a.quiz{background:var(--red);color:#fff;font-weight:700}
+a.hw{background:var(--grn);color:#fff;font-weight:700}
+.tag{font:600 12px "Source Sans 3",sans-serif;opacity:.75}
+.chapters{display:grid;gap:12px}
+.ch{display:grid;grid-template-columns:56px minmax(0,1fr);gap:14px;border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.num{width:52px;height:52px;border-radius:14px;background:var(--red);color:#fff;display:grid;place-items:center;font:700 22px "Source Sans 3",sans-serif}
+.ch h3{margin:0;font-size:20px;line-height:1.35}.ch h3 span{display:block;font:600 13px "Source Sans 3",sans-serif;color:var(--mute)}
+.soon{opacity:.55}.soon .num{background:var(--plate);color:var(--mute)}
+.soon p{margin:4px 0 0;font-size:14px;color:var(--mute)}
+footer{color:var(--mute);font-size:14px;border-top:1px solid var(--line)}
+@media(max-width:520px){.ch{grid-template-columns:1fr}.num{width:44px;height:44px;font-size:19px}}
+</style></head><body>
+<header class="band"><div class="wrap">
+<h1>دراسة شهادة المدرب الشخصي<span>NASM-CPT · Study site</span></h1>
+<p class="lead">ملخصات الفصول وأقسامها، واختبار كل فصل، وملفات المراجعة. يعمل على الآيباد والآيفون والكمبيوتر.</p>
+<div class="prog" id="prog"></div>
+</div></header>
+<main>
+<section class="band"><div class="wrap">
+<h2>ملخصات ومراجعات</h2>
+<div class="extras" id="extras"></div>
+</div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
+<h2>اختبارات إضافية</h2>
+<div class="extras" id="tests"></div>
+</div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
+<h2>الفصول</h2>
+<div class="chapters" id="chapters"></div>
+</div></section>
+</main>
+<footer class="band"><div class="wrap">للدراسة الشخصية فقط. نتائج الاختبارات تُحفظ في متصفح كل جهاز على حدة. آخر تحديث: <span id="upd"></span></div></footer>
+<script>
+// ===== Edit here when a chapter is added =====
+const UPDATED='26 نوفمبر 2026';
+const EXTRAS=[
+ {t:'مراجعة سريعة: الفصلان 5 و6',d:'جداول مختصرة لأهم النقاط',links:[['اطّلعي هنا','extras/review-ch5-6.html'],['تنزيل PDF','extras/review-ch5-6.pdf']]},
+ {t:'أرقام المنهج',d:'كل الأرقام المهمة في الفصول 1 إلى 7',links:[['تنزيل PDF','extras/numbers-ch1-7.pdf']]},
+ {t:'ملخص الجهاز العضلي',d:'61 عضلة ووظائفها، مع جدول التصحيحات',links:[['اطّلعي هنا','extras/muscles-summary.html'],['تنزيل PDF','extras/muscles-summary.pdf']]},
+ {t:'أهم 15 عضلة في المنهج',d:'مرتبة حسب عدد مرات ذكرها',links:[['تنزيل PDF','extras/muscles-top15.pdf']]},
+];
+const TESTS=[
+ {t:'اختبار الجهاز العضلي',d:'أسئلة بالصور على العضلات ووظائفها، ويمكن اختيار مجموعة أو أهم 15 عضلة',links:[['ابدئي الاختبار','extras/muscles-quiz.html','quiz']]},
+ {t:'واجب مستويات الحركة',d:'23 تمريناً بالصور من واجب الأكاديمية (الفصل 7)',links:[['ابدئي الاختبار','extras/planes-homework.html','hw']]},
+];
+const CH=[
+ {n:1,t:'الحالة المعاصرة للصحة واللياقة البدنية',e:'The Modern State of Health and Fitness',parts:[['الملخص','ch01/summary.pdf']],quiz:'ch01/quiz.html'},
+ {n:2,t:'مهنة التدريب الشخصي',e:'The Personal Training Profession',parts:[['الملخص','ch02/summary.pdf']],quiz:'ch02/quiz.html'},
+ {n:3,t:'علم نفس التمرين',e:'Psychology of Exercise',parts:[['الملخص','ch03/summary.pdf']],quiz:'ch03/quiz.html'},
+ {n:4,t:'التدريب السلوكي',e:'Behavioral Coaching',parts:[['الملخص','ch04/summary.pdf']],quiz:'ch04/quiz.html'},
+ {n:5,t:'الأجهزة العصبية والعضلية والعظمية',e:'The Nervous, Skeletal, and Muscular Systems',parts:[['القسم 1: الجهاز العصبي','ch05/part1-nervous.pdf'],['القسم 2: الجهاز العظمي','ch05/part2-skeletal.pdf'],['القسم 3: الجهاز العضلي','ch05/part3-muscular.pdf']],quiz:'ch05/quiz.html'},
+ {n:6,t:'الجهاز القلبي التنفسي والغدد الصماء والجهاز الهضمي',e:'Cardiorespiratory, Endocrine, and Digestive Systems',parts:[['القسم 1: القلبي التنفسي','ch06/part1-cardiorespiratory.pdf'],['القسم 2: الغدد الصماء','ch06/part2-endocrine.pdf'],['القسم 3: الجهاز الهضمي','ch06/part3-digestive.pdf']],quiz:'ch06/quiz.html'},
+ {n:7,t:'علم حركة الإنسان',e:'Human Movement Science',parts:[['القسم 1: المصطلحات ومستويات الحركة','ch07/part1-terms-planes.pdf'],['القسم 2: حركات العضلات وأدوارها','ch07/part2-muscle-actions.pdf'],['القسم 3: القوة والأنظمة العضلية','ch07/part3-force-systems.pdf']],quiz:'ch07/quiz.html'},
+ {n:8,t:'تمرين التمثيل الغذائي والطاقة الحيوية',e:'Exercise Metabolism and Bioenergetics'},
+ {n:9,t:'التغذية',e:'Nutrition'},
+ {n:10,t:'المكملات',e:'Supplementation'},
+ {n:11,t:'التقييمات الخاصة بالصحة والعافية واللياقة البدنية',e:'Health, Wellness, and Fitness Assessments'},
+ {n:12,t:'تقييمات القوام والحركة والأداء',e:'Posture, Movement, and Performance Assessments'},
+ {n:13,t:'التدريب المتكامل ونموذج تدريب الأداء الأمثل',e:'Integrated Training and the OPT Model'},
+ {n:14,t:'مفاهيم تدريب المرونة',e:'Flexibility Training Concepts'},
+ {n:15,t:'تدريب اللياقة القلبية التنفسية',e:'Cardiorespiratory Training Concepts'},
+ {n:16,t:'مفاهيم تدريب الجذع',e:'Core Training Concepts'},
+ {n:17,t:'مفاهيم تدريب التوازن',e:'Balance Training Concepts'},
+ {n:18,t:'مفاهيم تدريب البليومتري (التفاعلي)',e:'Plyometric (Reactive) Training Concepts'},
+ {n:19,t:'مفاهيم تدريب السرعة والرشاقة وسرعة رد الفعل',e:'Speed, Agility, and Quickness Training Concepts'},
+ {n:20,t:'مفاهيم تدريب المقاومة',e:'Resistance Training Concepts'},
+ {n:21,t:'نموذج الأداء التدريبي الأمثل',e:'The Optimum Performance Training Model'},
+ {n:22,t:'مقدمة لتمرين الأنماط',e:'Introduction to Exercise Modalities'},
+ {n:23,t:'الظروف الصحية المزمنة',e:'Chronic Health Conditions and Special Populations'},
+];
+// ============================================
+{
+const btn=([l,h,k])=>`<a class="btn${k?' '+k:''}" href="${h}">${l}</a>`;
+document.getElementById('upd').textContent=UPDATED;
+document.getElementById('extras').innerHTML=EXTRAS.map(x=>`<div class="card"><h3>${x.t}</h3><div style="font-size:15px;color:var(--mute)">${x.d}</div><div class="links">${x.links.map(btn).join('')}</div></div>`).join('');
+document.getElementById('tests').innerHTML=TESTS.map(x=>`<div class="card"><h3>${x.t}</h3><div style="font-size:15px;color:var(--mute)">${x.d}</div><div class="links">${x.links.map(btn).join('')}</div></div>`).join('');
+document.getElementById('chapters').innerHTML=CH.map(c=>{
+ const ready=!!c.parts;
+ return `<article class="ch${ready?'':' soon'}" id="ch${c.n}"><div class="num">${c.n}</div><div><h3>${c.t}<span>${c.e}</span></h3>${ready?`<div class="links">${c.parts.map(btn).join('')}${c.quiz?btn(['اختبار الفصل',c.quiz,'quiz']):''}${(c.extra||[]).map(btn).join('')}</div>`:'<p>قريباً</p>'}</div></article>`}).join('');
+document.getElementById('prog').innerHTML=CH.map(c=>`<i class="${c.parts?'on':''}">${c.n}</i>`).join('');
+}
+</script></body></html>
