@@ -1,0 +1,975 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ملف العميل للقياسات · NASM-CPT</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: a calm clinic clipboard for a personal trainer.
+IDEA: each paper form becomes a live sheet that fills, calculates and prints like the original.
+PICTURE: the client's eight numbered forms in order, each turning green when complete.
+COLOUR and TYPE: the site's muscle red for actions, white paper sheets, rating bars green→red; Noto Naskh Arabic + Source Sans 3.
+LAYOUT: top bar (trainer brand + nav), panel of controls, then the paper sheet. Print shows only the sheet.
+*/
+:root{--bg:#f4f1ee;--paper:#fff;--ink:#1d1a19;--mute:#655c57;--red:#8c2f25;--line:#d9d1cb;--soft:#f6f2ef;--grn:#2f7a34;--yel:#f2c230;--blue:#0d3b6b}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Noto Naskh Arabic","Source Sans 3",serif;overflow-x:clip}
+.en{font-family:"Source Sans 3",system-ui,sans-serif;direction:ltr;unicode-bidi:isolate}
+a{color:var(--red)}
+.top{background:var(--red);color:#fff;position:sticky;top:0;z-index:5}
+.topin{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:8px max(3vw,12px)}
+#brand{display:flex;align-items:center;gap:10px;margin-inline-end:auto}#brand img{height:40px;max-width:90px;object-fit:contain;background:#fff;border-radius:8px;padding:2px}
+#brand b{display:block;font-size:18px;line-height:1.2}#brand span{font-size:13px;opacity:.85}
+#nav{display:flex;flex-wrap:wrap;gap:4px}#nav a{color:#fff;text-decoration:none;padding:8px 12px;border-radius:9px;font-size:15px;min-height:40px;display:inline-flex;align-items:center}
+#nav a.on{background:rgba(255,255,255,.2);font-weight:700}#nav a:focus-visible,.btn:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+main{max-width:1100px;margin:0 auto;padding:16px max(3vw,10px) 60px}
+.panel{background:var(--paper);border-radius:16px;padding:16px 20px;margin-bottom:14px;border:1px solid var(--line)}
+h1{font-size:26px;margin:0 0 8px;color:var(--red)}h3{margin:0 0 8px;font-size:18px;color:var(--blue)}h4{margin:10px 0 4px}
+.crumb{font-size:14px;margin:0 0 6px;color:var(--mute)}
+.privacy{background:#eef6ee;border-radius:10px;padding:8px 12px;font-size:14.5px}
+.muted{color:var(--mute)}small{display:block;color:var(--mute);font-size:12.5px;line-height:1.5}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font:inherit;font-size:15px;cursor:pointer;text-decoration:none}
+.btn.pri{background:var(--red);color:#fff;border-color:var(--red);font-weight:700}.btn.danger{color:#a3261c;border-color:#e6b8b2;background:#fff5f4}
+.lnk{background:none;border:0;color:var(--red);font:inherit;font-size:13px;cursor:pointer;padding:2px 0;text-decoration:underline}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.f{font:inherit;font-size:15.5px;border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;color:var(--ink);min-height:40px;width:100%}
+.f:focus{outline:2px solid var(--red);outline-offset:0;border-color:var(--red)}
+textarea.f{resize:vertical;min-height:44px;overflow:hidden}
+label{display:block}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px 16px;margin:6px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px 16px;margin:6px 0}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px 16px;align-items:end;margin:6px 0}
+.grid5{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.span2{grid-column:1/-1}
+.newc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.newc .f{width:auto;flex:1 1 160px}
+.clist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:10px;margin:12px 0}
+.ccard{display:block;border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-decoration:none;color:var(--ink);background:var(--paper)}
+.ccard b{font-size:18px;display:block}.ccard>span{display:block;color:var(--mute);font-size:14px}
+.prog{display:flex;gap:4px;margin:6px 0}.prog i,.stepper a,.fnum{width:28px;height:28px;border-radius:8px;display:inline-grid;place-items:center;font:700 13px "Source Sans 3",sans-serif;font-style:normal;background:#e7e1dc;color:var(--ink);flex:none;text-decoration:none}
+.s1{background:var(--yel)!important;color:#2a2200!important}.s2{background:var(--grn)!important;color:#fff!important}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px}
+.flist{list-style:none;padding:0;margin:0;display:grid;gap:6px}.flist a,.brow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink)}
+.flist a>span:nth-child(2),.brow>span:nth-child(2){flex:1}.flist em{font-style:normal;font-size:13px;color:var(--mute)}.brow .acts{display:flex;gap:6px;flex-wrap:wrap}
+.tlist{columns:2 300px;padding-inline-start:20px}.tlist li{break-inside:avoid;margin:4px 0}.tlist a{text-decoration:none;color:var(--ink)}
+.stepper{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.stepper a{width:40px;height:40px;font-size:16px}.stepper a.on{outline:3px solid var(--red);outline-offset:2px}
+.adate{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--soft);border-radius:10px;padding:8px 10px}.adate .f{width:auto}.adate label{display:flex;gap:6px;align-items:center}
+.logo{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}.lprev{width:140px;height:80px;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center}.lprev img{max-width:130px;max-height:70px}
+#toast{position:fixed;bottom:16px;inset-inline-start:16px;background:#1d1a19;color:#fff;padding:8px 14px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;font-size:14px}#toast.show{opacity:.92}#toast.bad{background:#a3261c;opacity:1}
+/* ---------- sheet (paper) ---------- */
+.sheet{background:var(--paper);border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.08);padding:22px 26px;margin:0 auto 16px;max-width:900px}
+.sheet.land{max-width:1100px}
+.sh{border-bottom:3px solid var(--blue);padding-bottom:10px;margin-bottom:12px}
+.tb{display:flex;align-items:center;gap:12px;margin-bottom:8px}.tb img{max-height:56px;max-width:150px;object-fit:contain}.tb b{display:block;font-size:17px}.tb span{display:block;font-size:13px;color:var(--mute)}
+.st{display:flex;align-items:center;gap:10px}.st h2{margin:0;font-size:22px;color:var(--blue);line-height:1.3}.st .fnum{width:38px;height:38px;font-size:16px;background:var(--blue);color:#fff}
+.who{display:flex;flex-wrap:wrap;gap:6px 30px;margin-top:8px;font-size:15px}
+.blankline{display:inline-block;width:220px;border-bottom:1px solid #999;height:1.1em;vertical-align:bottom}.blankline.sh{width:110px;border-bottom:1px solid #999;padding:0;margin:0}
+.box{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;break-inside:avoid}
+.box.ok{background:#f1f8f1;border-color:#bcd9be}.box.warn{background:#fff8f0;border-color:#efcfa6}.box.decl{background:#f7f9fc}
+.qs{padding-inline-start:22px;margin:6px 0}.qs>li{padding:8px 0;border-bottom:1px dashed var(--line);break-inside:avoid}.qs.plain>li{padding:6px 0}
+.qt{margin-bottom:4px}.qx{margin-top:6px}
+.subq{margin:8px 0 0;padding:8px 10px;background:var(--soft);border-radius:8px}.subq ol{list-style:none;padding:0;margin:4px 0}.subq li{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:start;padding:5px 0;border-bottom:1px dotted var(--line)}.subq li .fn{grid-column:1/-1}.sl{font-weight:700;color:var(--blue)}
+.yn{display:inline-flex;gap:6px;flex-wrap:wrap}.rb,.cb{display:inline-flex;align-items:center;gap:5px;cursor:pointer;min-height:36px;padding:2px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:15px}
+.rb input,.cb input{width:18px;height:18px;accent-color:var(--red);margin:0}
+.rb:has(input:checked){background:var(--red);color:#fff;border-color:var(--red)}.cb:has(input:checked){background:#fdecea;border-color:var(--red)}
+td .cb{border:0;padding:0;min-height:28px;background:none}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:6px 14px}.goals label{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.scale{display:inline-flex;align-items:center;gap:6px}
+.bp{display:inline-flex;align-items:center;gap:6px}
+.f[style*="width"]{display:inline-block}
+.ft{width:100%;border-collapse:collapse;margin:6px 0;font-size:14.5px}.ft th{background:var(--blue);color:#fff;text-align:start;padding:6px 8px;font-weight:700}.ft td{border:1px solid var(--line);padding:5px 8px;vertical-align:top}
+.ft tr:nth-child(even) td{background:#f7f8fa}.ft td .f{min-height:34px;padding:3px 6px}.ft tr.off td{opacity:.45}.ft tr.sum td{background:#e9eef5;font-weight:700}
+.ft.grid td.c{text-align:center;padding:2px}.ft.sm{font-size:12px}.ft.sm th.v{writing-mode:vertical-rl;padding:4px 2px;font-size:11px;height:70px}.ft.opt tr.sec td{background:#c9d6ea;font-weight:700}
+.dwt td{text-align:center;font-family:"Source Sans 3",sans-serif;font-size:13px;padding:2px 4px}
+.sx{overflow-x:auto}
+.out{display:inline-block;min-width:2em;font-family:"Source Sans 3",sans-serif}.out:empty::after{content:"—";color:#bbb}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:14px;font-family:"Noto Naskh Arabic",serif;color:#fff}
+.c0{background:#2f7a34}.c1{background:#7aa33a}.c2{background:#d19a1f}.c3{background:#d0632a}.c4{background:#b02a1e}
+.rbar{display:flex;gap:3px;margin:8px 0 2px}.rbar span{flex:1 1 0;text-align:center;padding:5px 2px;font-size:12px;line-height:1.3;border-radius:6px;background:hsl(var(--h) 45% 88%);color:#333}
+.rbar span.on{background:hsl(var(--h) 60% 38%);color:#fff;font-weight:700;outline:2px solid #1d1a19}
+.result{border-radius:10px;padding:10px 14px;margin:10px 0;font-weight:700}.result.good{background:#e3f2e4;color:#1f5a23}.result.bad{background:#fdeceb;color:#8c2f25}
+.hint{background:#fff8dc;border-radius:8px;padding:8px 12px}
+.tip{font-size:13.5px;color:#4b5a6b;background:#f2f6fb;border-radius:8px;padding:6px 10px;margin:8px 0}
+.fn{font-size:12.5px;line-height:1.6;color:#6b3a10;border-top:1px dashed #c58a00;margin:6px 0;padding-top:4px}
+.steps2{display:flex;gap:8px;margin:8px 0}.steps2 span{padding:4px 12px;border-radius:999px;font-size:14px}.steps2 .on{background:var(--red);color:#fff}.steps2 .off{background:#eee;color:#999}
+.sigw{margin:4px 0}.sigl{font-size:14px;margin-bottom:3px}.sig{position:relative;height:110px;border:1.5px dashed #9aa;border-radius:8px;background:#fff;touch-action:none}
+.sig canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}.sig img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.psig{height:90px}
+.sf{border-top:1px solid var(--line);margin-top:14px;padding-top:6px;font-size:11.5px;color:var(--mute)}.sf p{margin:2px 0}
+.ref ol,.ref ul{padding-inline-start:22px}
+.printonly{display:none}
+.pb{height:0}
+@media (max-width:600px){.sheet{padding:14px 12px}.subq li{grid-template-columns:30px 1fr}.subq li .yn{grid-column:2}}
+/* ---------- print ---------- */
+@page{size:A4;margin:12mm}
+@media print{
+  body{background:#fff;font-size:12.5px;line-height:1.55}
+  .top,.panel,.np,#toast,.lnk{display:none!important}
+  main{padding:0;max-width:none}
+  .sheet{box-shadow:none;border-radius:0;padding:0;margin:0;max-width:none;break-after:page}
+  .sheet:last-child{break-after:auto}
+  .pb{break-after:page}
+  body.pall main>*:not(#printall){display:none!important}body.pall #printall{display:block!important}
+  .f{border:0;border-bottom:1px solid #888;border-radius:0;padding:0 3px;min-height:22px;background:none}
+  textarea.f{border:1px solid #bbb;border-radius:4px;overflow:visible}
+  .ft td .f{border-bottom:0}
+  .rb,.cb{border:0;background:none!important;color:#000!important;padding:0 4px;min-height:0}
+  .rb input,.cb input{accent-color:#000}
+  .box{padding:6px 10px;margin:6px 0}.box:has(.ft),.box:has(.qs){break-inside:auto}.ft tr{break-inside:avoid}textarea.f{min-height:30px}.qs>li{break-inside:avoid}
+  .ft th{background:#dfe6f0!important;color:#000;padding:3px 6px}
+  .ft td{padding:2px 5px}.ft td .f{min-height:18px;padding:0 2px}td .cb{min-height:0}.ft.grid td.c{padding:0}.ft.sm th.v{height:46px;font-size:9px}.ft.grid td.c input{width:11px;height:11px}.ft.grid td{line-height:1.1}.sheet.land .box{padding:3px 8px;margin:3px 0}
+  .ft td small{display:none}.sh{margin-bottom:6px;padding-bottom:6px}.qs>li{padding:4px 0}
+  .sig{height:70px;border-style:solid}
+  .tip{background:none;padding:0 0 0 0}
+  .rbar span.on{outline-width:2px}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@page land{size:A4 landscape;margin:10mm}.sheet.land{page:land}
+</style>
+<style media="print" id="landcss"></style>
+</head><body>
+<header class="top"><div class="topin"><div id="brand"></div>
+<nav id="nav" aria-label="الأقسام"><a href="#/" data-n="clients">العملاء</a><a href="#/blank" data-n="blank">النماذج الفارغة</a><a href="#/tables" data-n="tables">الجداول المرجعية</a><a href="#/settings" data-n="settings">إعدادات المدرب</a><a href="../index.html">↩ صفحة الدراسة</a></nav></div></header>
+<main id="app"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>/* ===== Content data: Client file (NASM CPT 7, Chapter 11) =====
+   Numbers verified against the English edition (NASM Essentials of Personal Fitness Training, 7th ed.).
+   Arabic wording taken from the academy forms and the Arabic edition; corrections are footnoted. */
+
+const REF = 'NASM Essentials of Personal Fitness Training, 7th ed. · Chapter 11';
+
+/* ---------- 1. PAR-Q+ 2020 ---------- */
+const PARQ = {
+  intro: 'الفوائد الصحية للنشاط البدني المنتظم واضحة؛ يجب على المزيد من الناس ممارسة النشاط البدني كل يوم من أيام الأسبوع. تعد المشاركة في النشاط البدني آمنة جدًا لمعظم الأشخاص. سيخبرك هذا الاستبيان ما إذا كان من الضروري لك طلب المزيد من النصائح من طبيبك أو أخصائي تمرين مؤهل قبل أن تصبح أكثر نشاطًا بدنيًا.',
+  p1head: 'يرجى قراءة الأسئلة السبعة أدناه بعناية والإجابة على كل سؤال بصراحة: حدد نعم أو لا.',
+  p1: [
+    {t:'هل قال طبيبك من قبل إنك تعاني من مرض في القلب أو ارتفاع في ضغط الدم؟'},
+    {t:'هل تشعر بألم في صدرك عند الراحة، أو أثناء أنشطتك اليومية في الحياة، أو عند القيام بنشاط بدني؟'},
+    {t:'هل تفقد التوازن بسبب الدوار أو فقدت الوعي في آخر 12 شهرًا؟', n:'الرجاء الإجابة بـ «لا» إذا كانت الدوخة لديك مرتبطة بالتنفس الزائد (بما في ذلك أثناء التمرينات الشاقة).'},
+    {t:'هل سبق أن تم تشخيصك بحالة طبية مزمنة أخرى (بخلاف أمراض القلب أو ارتفاع ضغط الدم)؟', f:'يرجى سرد الحالة (الحالات) هنا'},
+    {t:'هل تتناول حاليًا أدوية موصوفة لحالة طبية مزمنة؟', f:'يرجى سرد الحالة (الحالات) والأدوية هنا'},
+    {t:'هل تعاني حاليًا (أو عانيت في غضون الاثني عشر شهرًا الماضية) من مشكلة في العظام أو المفاصل أو الأنسجة الرخوة (العضلات أو الأربطة أو الأوتار) والتي يمكن أن تتفاقم عندما تصبح أكثر نشاطًا بدنيًا؟', n:'الرجاء الإجابة بـ «لا» إذا كانت لديك مشكلة في الماضي، لكنها لا تحد من قدرتك الحالية على أن تكون نشطًا بدنيًا.'},
+    {t:'هل قال طبيبك من قبل إنه يجب عليك فقط ممارسة النشاط البدني تحت إشراف طبي؟'}
+  ],
+  p1fn: 'النسخة العربية ترقّم أسئلة الصفحة الأولى 1–5 ثم 7 و8 (لا يوجد سؤال 6). الأسئلة سبعة كما في النسخة الأصلية، وتم ترقيمها هنا 1–7.',
+  allNo: ['إذا أجبت بـ «لا» على جميع الأسئلة أعلاه، فيُسمح لك بممارسة النشاط البدني. الرجاء التوقيع على إقرار المشارك. لا تحتاج إلى إكمال الصفحتين 2 و3.',
+    'ابدأ في أن تصبح أكثر نشاطًا بدنيًا – ابدأ ببطء وزد نشاطك تدريجيًا.',
+    'اتبع إرشادات النشاط البدني العالمية بالنسبة لعمرك. يمكنك المشاركة في تقييم الصحة واللياقة البدنية.',
+    'إذا كان عمرك يزيد عن 45 عامًا ولم تكن معتادًا على ممارسة التمارين الرياضية القوية المنتظمة لأقصى جهد، فاستشر أخصائي تمرين مؤهل قبل الانخراط في هذا التمرين المكثف.',
+    'إذا كانت لديك أي أسئلة أخرى، فاتصل بأخصائي تمرين مؤهل.'],
+  anyYes: 'إذا أجبت بنعم على واحد أو أكثر من الأسئلة أعلاه، أكمل الصفحتين 2 و3.',
+  delay: ['لديك مرض مؤقت مثل البرد أو الحمى. من الأفضل الانتظار حتى تشعر بالتحسن.',
+    'أنت حامل – تحدث إلى ممارس الرعاية الصحية وطبيبك و/أو أخصائي تمرين مؤهل قبل أن تصبح أكثر نشاطًا بدنيًا.',
+    'إذا شعرت بتغييرات صحية – أجب عن الأسئلة الواردة في الصفحتين 2 و3 من هذا المستند أو تحدث إلى طبيبك أو أخصائي تمرين مؤهل قبل الاستمرار في أي برنامج نشاط بدني.'],
+  fuHead: 'يرجى قراءة الأسئلة أدناه بعناية والإجابة على كل سؤال بصراحة: حدد نعم أو لا.',
+  ctrl: 'هل تجد صعوبة في السيطرة على حالتك بالأدوية أو العلاجات الأخرى التي يصفها الطبيب؟ (أجب بلا إذا كنت لا تتناول حاليًا أدوية أو علاجات أخرى)',
+  fu: [
+    {t:'هل تعاني من التهاب المفاصل أو هشاشة العظام أو مشاكل الظهر؟', s:[
+      'CTRL',
+      'هل لديك مشاكل في المفاصل تسبب الألم، أو كسر حديث بسبب هشاشة العظام أو السرطان، أو انزلاق الفقرات (مثل الانزلاق الفقاري)، و/أو انحلال الفقار / عيب بارس (صدع في الحلقة العظمية في الجزء الخلفي من العمود الفقري)؟',
+      'هل تناولت حقن الستيرويد أو أقراص الستيرويد بانتظام لأكثر من 3 أشهر؟']},
+    {t:'هل أنت مصاب حاليًا بالسرطان من أي نوع؟', s:[
+      'هل يشمل تشخيصك بالسرطان أيًا من الأنواع التالية: الرئة / القصبات، المايلوما المتعددة (سرطان خلايا البلازما)، الرأس و/أو العنق؟',
+      'هل تتلقى حاليًا علاجًا للسرطان (مثل العلاج الكيميائي)؟']},
+    {t:'هل لديك مرض في القلب أو القلب والأوعية الدموية؟ وهذا يشمل أمراض الشريان التاجي، وفشل القلب، واضطراب نظم القلب المشخّص.', s:[
+      'CTRL',
+      'هل تعاني من عدم انتظام ضربات القلب الذي يتطلب معالجة طبية؟ (على سبيل المثال: الرجفان الأذيني، تقلص البطين المبكر)',
+      {t:'هل تعاني من فشل القلب المزمن؟', fn:'3ج: النسخة العربية «هل تعاني من أمراض قلب مزمنة؟»، والأصل: chronic heart failure = فشل القلب المزمن.'},
+      'هل تم تشخيصك بمرض الشريان التاجي (القلب والأوعية الدموية) ولم تشارك في أي نشاط بدني منتظم خلال الشهرين الماضيين؟']},
+    {t:'هل تعاني حاليًا من ارتفاع ضغط الدم؟', s:[
+      'CTRL',
+      'هل لديك ضغط دم أثناء الراحة يساوي أو يزيد عن 160/90 ملم زئبق مع أو بدون دواء؟ (أجب بنعم إذا كنت لا تعرف ضغط الدم أثناء الراحة)']},
+    {t:'هل لديك مشاكل في التمثيل الغذائي تتضمن داء السكري النوع الأول والثاني؟', s:[
+      'هل تواجه غالبًا صعوبة في التحكم في مستويات السكر في الدم عن طريق الأطعمة أو الأدوية أو أي علاج آخر يصفه الطبيب؟',
+      'هل تعاني غالبًا من أعراض انخفاض نسبة السكر في الدم (نقص السكر في الدم) بعد ممارسة الرياضة و/أو أثناء أنشطة الحياة اليومية؟ قد تشمل علامات نقص السكر في الدم الاهتزاز والعصبية والتهيج غير المعتاد.',
+      'هل لديك أي علامات أو أعراض لمضاعفات مرض السكري مثل أمراض القلب أو الأوعية الدموية؟',
+      'هل تعاني من حالات أيضية أخرى مثل مرض السكري المرتبط بالحمل، أو مرض الكلى المزمن؟',
+      'هل تخطط للانخراط في تمرين عالي الشدة (أو شديد الشدة) بالنسبة لك في المستقبل القريب؟']},
+    {t:'هل لديك أي مشاكل في الصحة العقلية أو صعوبات في التعلم؟ وهذا يشمل مرض الزهايمر، والخرف، والاكتئاب، واضطراب القلق، واضطراب الأكل، والاضطراب الذهاني، والإعاقة الذهنية، ومتلازمة داون.', s:[
+      'CTRL',
+      'هل تعاني من متلازمة داون ومشاكل في الظهر تؤثر على الأعصاب أو العضلات؟']},
+    {t:'هل أنت مصاب بمرض في الجهاز التنفسي؟ وهذا يشمل ارتفاع ضغط الدم الرئوي ومرض الانسداد الرئوي المزمن والربو.', s:[
+      'CTRL',
+      'هل قال طبيبك من قبل إن مستوى الأكسجين في الدم لديك منخفض أثناء الراحة أو أثناء التمرين و/أو أنك بحاجة إلى علاج أكسجين إضافي؟',
+      'إذا كنت مصابًا بالربو، فهل تعاني حاليًا من أعراض ضيق الصدر والصفير عند التنفس وصعوبة التنفس والسعال المستمر (أكثر من يومين في الأسبوع)، أو هل استخدمت دواء الإنقاذ أكثر من مرتين في الأسبوع الماضي؟',
+      'هل قال طبيبك من قبل إنك تعاني من ارتفاع ضغط الدم في الأوعية الدموية في رئتيك؟']},
+    {t:'هل تعرضت لإصابة في الحبل الشوكي؟ وهذا يشمل الشلل الرباعي والشلل النصفي.', fn:'8: النسخة العربية «إصابة في العمود الفقري»، والأصل: Spinal Cord Injury = إصابة في الحبل الشوكي.', s:[
+      'CTRL',
+      'هل تعاني عادةً من انخفاض ضغط الدم أثناء الراحة بدرجة كافية للتسبب في الدوخة أو الدوار و/أو الإغماء؟',
+      'هل أوضح طبيبك أنك تعاني من نوبات مفاجئة من ارتفاع ضغط الدم (المعروفة باسم عسر المنعكسات اللاإرادي)؟']},
+    {t:'هل أصبت بسكتة دماغية من قبل؟ وهذا يشمل النوبة الإقفارية العابرة (TIA) أو الحدث الوعائي الدماغي.', s:[
+      'CTRL',
+      'هل تعاني من أي إعاقة في المشي أو الحركة؟',
+      'هل تعرضت لسكتة دماغية أو ضعف في الأعصاب أو العضلات خلال الأشهر الستة الماضية؟']},
+    {t:'هل لديك أي حالة طبية أخرى غير مذكورة أعلاه، أو هل لديك حالتان طبيتان أو أكثر؟', fn:'10: النسخة العربية تكرر نص 10أ في مكان السؤال الرئيسي، وينقصها السؤال 10ج. تم وضعهما كما في النسخة الأصلية لـ PAR-Q+ 2020.', s:[
+      'هل تعرضت للإغماء أو فقدان الوعي نتيجة إصابة في الرأس خلال الـ 12 شهرًا الماضية، أو هل تم تشخيص إصابتك بارتجاج في المخ خلال الـ 12 شهرًا الماضية؟',
+      'هل لديك حالة طبية غير مدرجة (مثل الصرع، أمراض عصبية، مشاكل في الكلى)؟',
+      {t:'هل تعيش حاليًا مع حالتين طبيتين أو أكثر؟', fn:'10ج: غير موجود في النسخة العربية، وأُضيف من النسخة الأصلية.'}]}
+  ],
+  fuFn: 'السؤال 10: النسخة العربية تكرر نص 10أ في مكان السؤال الرئيسي، وينقصها السؤال 10ج. تم وضع السؤال الرئيسي و10ج كما في النسخة الأصلية لـ PAR-Q+ 2020.',
+  readyNo: ['إذا أجبت بـ «لا» على جميع أسئلة المتابعة (الصفحتان 2–3) حول حالتك الطبية، فأنت جاهز لأن تصبح أكثر نشاطًا بدنيًا. وقّع على إقرار المشارك أدناه:',
+    'يُنصح باستشارة أخصائي تمرين مؤهل لمساعدتك في وضع خطة نشاط بدني آمنة وفعالة لتلبية احتياجاتك الصحية.',
+    'نشجعك على البدء ببطء والبناء تدريجيًا – 20 إلى 60 دقيقة من التمارين منخفضة الشدة إلى متوسطة الشدة، 3–5 أيام في الأسبوع، بما في ذلك التمارين الهوائية وتمارين تقوية العضلات.',
+    'مع تقدمك، يجب أن تهدف إلى تجميع 150 دقيقة أو أكثر من النشاط البدني المعتدل الشدة أسبوعيًا.',
+    'إذا كان عمرك يزيد عن 45 عامًا ولم تكن معتادًا على ممارسة التمارين الرياضية القوية المنتظمة لأقصى جهد، فاستشر أخصائي تمرين مؤهل قبل الانخراط في هذا التمرين المكثف.'],
+  someYes: 'إذا أجبت بنعم على واحد أو أكثر من أسئلة المتابعة حول حالتك الطبية: يجب أن تسعى للحصول على مزيد من المعلومات قبل أن تصبح أكثر نشاطًا بدنيًا أو الانخراط في تقييم اللياقة البدنية.',
+  delay2: ['إذا كان لديك مرض مؤقت مثل البرد أو الحمى. من الأفضل الانتظار حتى تشعر بالتحسن.',
+    'إذا كنت حاملًا – تحدث إلى ممارس الرعاية الصحية وطبيبك أو أخصائي تمرين مؤهل قبل أن تصبح أكثر نشاطًا بدنيًا.',
+    'إذا شعرت بتغييرات صحية – تحدث إلى طبيبك أو أخصائي تمرين مؤهل قبل الاستمرار في أي برنامج نشاط بدني.'],
+  notes: ['نشجعك على تصوير استبيان جاهزية النشاط البدني. يجب عليك استخدام الاستبيان بأكمله ولا يُسمح بأي تغييرات.',
+    'لا يتحمل المؤلفون والمنظمات الشريكة ووكلاؤهم أي مسؤولية تجاه الأشخاص الذين يقومون بنشاط بدني. إذا كنت في شك بعد إكمال الاستبيان، فاستشر طبيبك قبل ممارسة النشاط البدني.'],
+  decl: ['يرجى قراءة البيان أدناه والتوقيع عليه من جميع الأشخاص الذين أكملوا الاستبيان.',
+    'إذا كان عمرك أقل من السن القانوني المطلوب للموافقة أو تطلب موافقة مقدم الرعاية، فيجب على والديك أو الوصي عليك أو مقدم الرعاية التوقيع على هذا النموذج.',
+    'لقد قرأت، أنا الموقع أدناه، وفهمت بما يرضيني تمامًا وأكملت هذا الاستبيان. أقر بأن تصريح النشاط البدني هذا صالح لمدة 12 شهرًا كحد أقصى من تاريخ اكتماله ويصبح غير صالح إذا تغيرت حالتي. أقر أيضًا بأن المجتمع / مركز اللياقة البدنية قد يحتفظ بنسخة من هذا النموذج في سجلاته. في هذه الحالات، سيحافظ على سريته، مع الامتثال للقانون المعمول به.'],
+  credit: '© 2020 PAR-Q+ Collaboration · www.eparmedx.com · Warburton DER, Jamnik VK, Bredin SSD, Gledhill N. الترجمة العربية كما وردت في مواد الأكاديمية، مع تصحيح الأخطاء المذكورة في الحواشي.'
+};
+
+/* ---------- 2. Lifestyle & health history ---------- */
+// type: t=text, ta=long text, n=number, s10=0–10 scale, lmh=low/med/high, yn=yes/no (+ explain)
+const LIFE = [
+  {h:'التمرين', q:[
+    {id:'ex_act', t:'ما هي الأنشطة الرياضية التي تشارك فيها حاليًا (مثل الجري، ورفع الأثقال، والتمارين الجماعية، وما إلى ذلك)؟', ty:'ta'},
+    {id:'ex_days', t:'كم يومًا في الأسبوع تقضي 60 دقيقة على الأقل في ممارسة التمارين معتدلة الشدة؟', ty:'n'},
+    {id:'ex_goals', t:'على مقياس من 0 إلى 10، ما مدى أهمية أهداف اللياقة التالية بالنسبة إليك؟', ty:'goals', items:['خسارة الوزن','زيادة حجم العضلات','مستوى الأداء الرياضي','تحسين الصحة']}]},
+  {h:'النظام الغذائي', q:[
+    {id:'d_score', t:'على مقياس من 0 إلى 10، هل تعتبر نظامك الغذائي العام صحيًا؟', ty:'s10'},
+    {id:'d_diet', t:'هل تتبع حاليًا أي نوع من أنواع الأنظمة الغذائية؟ إذا كان الأمر كذلك، فما النظام الغذائي الذي تتبعه وما أسباب ذلك؟', ty:'ta'},
+    {id:'d_salt', t:'كيف تقيّم المدخول اليومي الخاص بك من الملح؟', ty:'lmh'},
+    {id:'d_sugar', t:'كيف تقيّم المدخول اليومي الخاص بك من السكر؟', ty:'lmh'},
+    {id:'d_fat', t:'كيف تقيّم المدخول اليومي الخاص بك من الدهون؟', ty:'lmh'},
+    {id:'d_fast', t:'على مقياس من 0 إلى 10، ما مدى قدرتك على التحكم بفاعلية في إغراءات تناول الوجبات السريعة؟', ty:'s10'},
+    {id:'d_alc', t:'كم عدد المشروبات الكحولية التي تستهلكها في الأسبوع؟', ty:'n'},
+    {id:'d_caf', t:'هل تستهلك المشروبات التي تحتوي على الكافيين، مثل القهوة أو الشاي أو الصودا أو مشروبات الطاقة؟ كم عدد مرات استهلاكها في الأسبوع؟', ty:'yn', x:'عدد المرات في الأسبوع'}]},
+  {h:'أسلوب الحياة', q:[
+    {id:'l_sleep', t:'هل تشعر أنك تحصل على قسط كافٍ من النوم وتستيقظ وتشعر بالراحة كل يوم؟', ty:'yn', x:'عدد ساعات النوم / ملاحظات'},
+    {id:'l_stress', t:'على مقياس من 0 إلى 10، كيف تقيّم متوسط مستوى التوتر لديك؟', ty:'s10'},
+    {id:'l_smeth', t:'ما الأساليب التي تستخدمها حاليًا للتحكم في مستويات التوتر لديك؟', ty:'ta'},
+    {id:'l_smoke', t:'هل تدخن التبغ أو تستخدم المدخّن الإلكتروني؟', ty:'yn'}]},
+  {h:'المهنة', q:[
+    {id:'o_job', t:'ما هي مهنتك؟', ty:'t'},
+    {id:'o_sit', t:'هل تتطلب مهنتك الجلوس لفترات طويلة؟', ty:'yn', x:'يرجى التوضيح', hint:'الجلوس الطويل: ثني الوركين طويلًا (شد عضلات الورك وآلام أسفل الظهر)، وأمام الكمبيوتر: ضم الكتفين وانحناء الرأس للأمام، واستهلاك طاقة منخفض. (الكتاب ص 329)'},
+    {id:'o_rep', t:'هل تتطلب مهنتك الحركة المتكررة؟', ty:'yn', x:'يرجى التوضيح'},
+    {id:'o_heel', t:'هل تتطلب مهنتك ارتداء أحذية بكعب (مثل أحذية رسمية أو أحذية عمل)؟', ty:'yn', hint:'الكعب العالي: الكاحل في ثني أخمصي طويلًا ← شد الربلة ووتر أخيل، انخفاض الثني الظهري، الانبطاح المفرط، تسطح قوس القدم. (الكتاب ص 329)'}]},
+  {h:'الترفيه', q:[
+    {id:'r_rec', t:'هل تشارك في أي أنشطة بدنية ترفيهية (الجولف، والتزلج، وغيرها)؟', ty:'yn', x:'يرجى التوضيح'},
+    {id:'r_hob', t:'هل لديك هوايات إضافية (البستنة، وصيد الأسماك، والموسيقى، وغيرها)؟', ty:'yn', x:'يرجى التوضيح'}]},
+  {h:'الحالة الطبية', q:[
+    {id:'m_inj', t:'يرجى ذكر أي إصابات عضلية هيكلية سابقة:', ty:'ta', hint:'الإصابة السابقة في الجهاز العضلي الهيكلي مؤشر قوي على إصابة مستقبلية. (الكتاب ص 329)'},
+    {id:'m_surg', t:'يرجى ذكر أي عمليات جراحية سابقة:', ty:'ta'},
+    {id:'m_rehab', t:'إذا كنت قد تعرضت لإصابات أو عمليات جراحية، فهل تمت إعادة تأهيلك بشكل صحيح، وهل حصلت على تصريح من طبيب للعودة إلى النشاط البدني؟', ty:'ta'},
+    {id:'m_chron', t:'هل لديك أي حالات صحية مزمنة (مثل، على سبيل المثال لا الحصر، أمراض القلب والأوعية الدموية، واضطرابات الرئة، وارتفاع ضغط الدم، والسكري، والسرطان)؟', ty:'yn', x:'يرجى التوضيح'},
+    {id:'m_meds', t:'هل تتناول أي أدوية؟ وإذا كان الأمر كذلك، فهل حصلت على تصريح من طبيبك للمشاركة في النشاط البدني؟', ty:'ta', hint:'ليس دور المدرب إعطاء الأدوية أو وصفها أو التثقيف حول استخدامها؛ يستشير طبيب العميل. (الكتاب ص 330)'},
+    {id:'m_notes', t:'ملاحظات إضافية:', ty:'ta'}]}
+];
+
+/* ---------- 3. Body composition ---------- */
+const CIRC = [ // sites as in Table 11-5 (book wording)
+  {id:'waist', a:'الخصر', d:'أضيق نقطة للخصر، تحت القفص الصدري وفوق عظام الحوض مباشرة؛ أو عند السرة'},
+  {id:'hips', a:'الوركان', d:'القدمان معًا، أكبر محيط لمنطقة الأرداف'},
+  {id:'neck', a:'الرقبة', d:'تحت الحنجرة مباشرة (تفاحة آدم للرجال)'},
+  {id:'chest', a:'الصدر', d:'عبر أعرض جزء من الصدر'},
+  {id:'thigh', a:'الفخذ', d:'واقفًا، الرجلان متباعدتان 10 سم، أكبر محيط تحت الطية الألوية'},
+  {id:'calf', a:'الربلة', d:'الجزء الأكثر امتلاءً بين الكاحل والركبة'},
+  {id:'arm', a:'الذراع (العضلة ذات الرأسين)', d:'الجزء الأكثر امتلاءً عند منتصف المسافة بين الكتف والمرفق'}
+];
+const CIRC_FN = 'نموذج الأكاديمية يكتب أول موقعين «الوسط» و«الخصر»، ويكتب «نسبة الخصر إلى الورك». في الكتاب (الجدول 11-5): الخصر والوركان، و«نسبة الخصر إلى الحوض» (WHR).';
+const SKF = [ // Table 11-6
+  {id:'tri', a:'العضلة ذات الثلاثة رؤوس العضدية (Triceps)', d:'عمودية، خلف الذراع، منتصف المسافة بين الكتف والمرفق'},
+  {id:'bi', a:'العضلة ذات الرأسين العضدية (Biceps)', d:'عمودية، أمام بطن العضلة، أعلى بـ 1 سم من مستوى ثلاثية الرؤوس'},
+  {id:'chest', a:'الصدر', d:'مائلة؛ الرجال: نصف المسافة بين الخط الإبطي الأمامي والحلمة؛ النساء: الثلث'},
+  {id:'abd', a:'البطن', d:'عمودية، 2.54 سم (1 إنش) بجانب السرة'},
+  {id:'midax', a:'منتصف الإبط', d:'عمودية، على خط منتصف الإبط بمستوى الناتئ الرهابي'},
+  {id:'subsc', a:'تحت الكتف', d:'مائلة، 1–2 سم تحت الزاوية السفلية لعظم الكتف'},
+  {id:'supra', a:'فوق الحرقفة', d:'مائلة، فوق العرف الحرقفي مباشرة بمحاذاة الخط الإبطي الأمامي'},
+  {id:'thigh', a:'الفخذ', d:'عمودية، منتصف المسافة بين الورك والرضفة'}
+];
+const PROTO = {
+  jp7:{a:'بروتوكول المناطق السبع لجاكسون وبولوك', t:'الجدول 11-7', m:['chest','midax','subsc','tri','abd','supra','thigh'], f:['chest','midax','subsc','tri','abd','supra','thigh']},
+  jp3:{a:'بروتوكول المناطق الثلاث لجاكسون وبولوك', t:'الجدول 11-8', m:['chest','abd','thigh'], f:['tri','supra','thigh']},
+  dw4:{a:'بروتوكول المناطق الأربع لدورنين ووميرسلي', t:'الجدول 11-9', m:['bi','tri','subsc','supra'], f:['bi','tri','subsc','supra']}
+};
+// Durnin–Womersley constants reproduced from Table 11-10 (book values match to 0.01)
+const DW = {
+  m:[[19,1.1620,0.0630],[29,1.1631,0.0632],[39,1.1422,0.0544],[49,1.1620,0.0700],[999,1.1715,0.0779]],
+  f:[[19,1.1540,0.0678],[29,1.1599,0.0717],[39,1.1423,0.0632],[49,1.1333,0.0612],[999,1.1334,0.0645]]
+};
+
+/* ---------- Classification tables (English edition) ---------- */
+const T = {
+  bp:[ // Table 11-1
+    {k:'طبيعي', s:'أقل من 120', d:'أقل من 80', r:'حافظ عليه', c:0},
+    {k:'مرتفع', s:'120–129', d:'أقل من 80', r:'تغييرات في نمط الحياة', c:1},
+    {k:'ارتفاع ضغط الدم: المرحلة 1', s:'130–139', d:'80–89', r:'تغييرات في نمط الحياة + مراقبة طبية', c:2},
+    {k:'ارتفاع ضغط الدم: المرحلة 2', s:'140 أو أكثر', d:'90 أو أكثر', r:'تغييرات في نمط الحياة + مراقبة طبية + أدوية', c:3},
+    {k:'أزمة ارتفاع ضغط الدم', s:'أكثر من 180', d:'أكثر من 120', r:'الحصول الفوري على رعاية طبية', c:4}],
+  bmi:[ // Table 11-2
+    {max:18.5, k:'نقص الوزن', r:'زائد', c:2},{max:25, k:'الوزن الصحي', r:'منخفض', c:0},{max:30, k:'زيادة الوزن', r:'زائد', c:2},
+    {max:35, k:'السمنة', r:'عالٍ', c:3},{max:40, k:'مستوى السمنة 2', r:'مرتفع جدًا', c:4},{max:1e9, k:'مستوى السمنة 3', r:'مرتفع للغاية', c:4}],
+  waist:{ // Table 11-3 (cm)
+    f:[[70,'منخفض جدًا',0],[90,'منخفض',1],[110,'عالٍ',3],[1e9,'مرتفع جدًا',4]],
+    m:[[80,'منخفض جدًا',0],[100,'منخفض',1],[120.0001,'عالٍ',3],[1e9,'مرتفع جدًا',4]]},
+  whr:{ // Table 11-4
+    m:[[0.955,'منخفض',0],[1.0,'متوسط',2],[1e9,'عالٍ',4]],
+    f:[[0.805,'منخفض',0],[0.855,'متوسط',2],[1e9,'عالٍ',4]]},
+  ymcaCats:['ممتاز','جيد','فوق المتوسط','متوسط','أقل من المتوسط','ضعيف','ضعيف جدًا'],
+  ymcaAges:['18–25','26–35','36–45','46–55','56–65','65+'],
+  ymca:{ // Table 11-13 [category][age] = [low, high] (HR, beats in 60 s)
+    m:[[[50,76],[51,76],[49,76],[56,82],[60,77],[59,81]],
+       [[79,84],[79,85],[80,88],[87,93],[86,94],[87,92]],
+       [[88,93],[88,94],[92,88],[95,101],[97,100],[94,102]],
+       [[95,100],[96,102],[100,105],[103,111],[103,109],[104,110]],
+       [[102,107],[104,110],[108,113],[113,119],[111,117],[114,118]],
+       [[111,119],[114,121],[116,124],[121,126],[119,128],[121,126]],
+       [[124,157],[126,161],[130,163],[131,159],[131,154],[130,151]]],
+    f:[[[52,81],[58,80],[51,84],[63,91],[60,92],[70,92]],
+       [[85,93],[85,92],[89,96],[95,101],[97,103],[96,101]],
+       [[96,102],[95,101],[100,104],[104,110],[106,111],[104,111]],
+       [[104,110],[104,110],[107,112],[113,118],[113,118],[116,121]],
+       [[113,120],[113,119],[115,120],[120,124],[119,127],[123,126]],
+       [[122,131],[122,129],[124,132],[126,132],[129,135],[128,133]],
+       [[135,169],[134,171],[137,169],[137,171],[141,174],[135,155]]]},
+  rockCats:['ممتاز','جيد','فوق المتوسط','متوسط','مقبول','ضعيف'],
+  rock:{ // Table 11-14 (age 30–69), upper bound of each category in seconds
+    m:['<10:12','10:13–11:42','11:43–13:13','13:14–14:44','14:45–16:23','>16:24'],
+    f:['<11:40','11:41–13:08','13:09–14:36','14:37–16:04','16:05–17:31','>17:32'],
+    mUp:[612,702,793,884,983,1e9], fUp:[700,788,876,964,1051,1e9],
+    pct:[['90%','11:08','11:45'],['75%','11:42','12:49'],['50%','12:38','13:15'],['25%','13:38','14:12'],['10%','14:37','15:03']]},
+  runCats:['ممتاز جدًا','ممتاز','جيد','مقبول','ضعيف','ضعيف جدًا'],
+  runAges:['20–29','30–39','40–49','50–59','60–69'],
+  run:{ // Tables 11-15 (men) & 11-16 (women) [category][age] = 'mm:ss–mm:ss'
+    m:[['8:22–9:10','8:49–9:31','9:02–9:47','9:31–10:27','10:09–11:20'],
+       ['9:34–10:08','9:52–10:38','10:09–11:09','11:09–12:08','12:10–13:25'],
+       ['10:49–11:27','11:09–11:49','11:52–12:25','12:53–13:53','14:33–15:20'],
+       ['11:58–12:29','12:25–12:53','13:05–13:50','14:33–15:14','16:19–17:19'],
+       ['13:08–13:58','13:48–14:33','14:33–15:32','16:16–17:30','18:39–20:13'],
+       ['15:14–20:55','15:56–20:55','17:04–22:22','19:24–27:08','23:27–31:59']],
+    f:[['9:23–10:20','9:52–11:08','10:09–11:35','11:34–13:16','12:25–14:28'],
+       ['10:59–11:56','11:43–12:53','12:25–13:38','13:58–15:14','15:32–16:46'],
+       ['12:51–13:25','13:41–14:33','14:33–15:17','16:26–17:19','18:05–18:52'],
+       ['14:15–15:05','15:14–15:56','16:13–17:11','18:05–19:10','20:08–20:55'],
+       ['15:56–17:11','16:46–18:18','18:26–19:43','20:17–21:57','22:34–23:55'],
+       ['18:39–25:17','20:13–25:10','21:52–27:55','23:55–30:34','26:32–33:05']]},
+  rpe10:[['0','بدون جهد، في وضع الراحة'],['1','سهل جدًا'],['2–3','سهل'],['4–5','متوسط، صعب نسبيًا'],['6–7','مرتفع، مكثف'],['8–9','صعب جدًا'],['10','أقصى جهد، أعلى مستوى ممكن']],
+  rpe20:[['6',''],['7','سهل للغاية'],['8',''],['9','سهل جدًا'],['10',''],['11','سهل نسبيًا'],['12',''],['13','صعب نسبيًا'],['14',''],['15','صعب'],['16',''],['17','صعب جدًا'],['18',''],['19','صعب للغاية'],['20','']],
+  vt1:[['الإحماء (الدقائق 1–4)','4.0','','',''],['الدقيقة 5','4.5','سهل','117','3.5'],['الدقيقة 6','5.0','سهل','125','4'],['الدقيقة 7','5.5','سهل نسبيًا','133','5'],['الدقيقة 8','6.0','سهل نسبيًا','138','6'],['الدقيقة 9','6.5','صعب (VT1)','142','6.5'],['الدقيقة 10','7.0','شديد الصعوبة','147','7'],['التهدئة (الدقائق 11–14)','4.0','','','']],
+  term:['أي إشارة لألم في الصدر أو أعراض تشبه الذبحة.',
+    'انخفاض ضغط الدم الانقباضي أكثر من 10 ملم زئبق عن القياس قبل التمرين مع زيادة شدة التمرين.',
+    'ارتفاع مفرط في ضغط الدم: الانقباضي أكثر من 250 ملم زئبق أو الانبساطي أكثر من 115 ملم زئبق.',
+    'إرهاق مفرط، أو قصر النفس، أو صفير غير معتاد في التنفس.',
+    'علامات ضعف التروية: دوخة أو غثيان، جلد شاحب أو ازرقاق حول الفم، جلد بارد ورطب.',
+    'حركات غير متناسقة، أو دوار، أو فقدان مفاجئ ومؤقت للوعي (نقص وصول الأكسجين للدماغ).',
+    'ألم حاد في الساق أو تشنج.',
+    'يطلب الفرد التوقف أو إيقاف الاختبار.',
+    'أي عطل في معدات التمرين أو الاختبار.'],
+  rationale:[['الأهمية','تقييم المخاطر الصحية (HRA) مهم دائمًا؛ أما اختبارات اللياقة الأولية فحسب أهداف العميل واحتياجاته وقدراته.'],
+    ['الملاءمة','ليس الجميع يحتاج التقييمات الفسيولوجية أو يرغب فيها؛ قد تسبب الإحباط أو الحرج أو ضعف الثقة.'],
+    ['الصلاحية','هل يقيس الاختبار بدقة ما أُعد لقياسه؟ مثال: ثني الجذع من الجلوس الطويل قد لا يصلح لتقييم المرونة العامة.'],
+    ['الموثوقية','هل يعطي نتائج متسقة ومتكررة؟ مثال: طيات الجلد ضعيفة الموثوقية إذا لم يتقنها المختبِر.']],
+  pre:[['الملابس','رياضية مريحة'],['السوائل','الكثير من السوائل خلال 24 ساعة قبل الاختبار'],['قبل 3 ساعات على الأقل','تجنب الأطعمة الثقيلة والتبغ والكحول والكافيين'],['التمرين','تجنب الرياضة أو النشاط الشاق في اليوم السابق أو يوم الاختبار'],['النوم','قسط كافٍ في الليلة السابقة']]
+};
+
+/* ---------- Reference tables index ---------- */
+const TABLES = [
+  {id:'rationale', a:'الأساس المنطقي لتقييم اللياقة', en:'Figure 11-2', ar:'ص 331'},
+  {id:'term', a:'معايير إنهاء اختبار التمرين', en:'Figure 11-3', ar:'ص 333'},
+  {id:'pre', a:'تعليمات ما قبل التقييم', en:'Lesson 2 · Pre-assessment Instructions', ar:'ص 334'},
+  {id:'bp', a:'نطاقات تصنيف ضغط الدم', en:'Table 11-1', ar:'ص 337'},
+  {id:'bmi', a:'تصنيف مؤشر كتلة الجسم', en:'Table 11-2', ar:'ص 339'},
+  {id:'waist', a:'المخاطر الصحية حسب محيط الخصر', en:'Table 11-3', ar:'ص 341'},
+  {id:'whr', a:'تصنيفات نسبة الخصر إلى الحوض', en:'Table 11-4', ar:'ص 341'},
+  {id:'circ', a:'مواقع قياس محيط الجسم', en:'Table 11-5', ar:'ص 342'},
+  {id:'skf', a:'المواقع القياسية لقياس طيات الجلد', en:'Table 11-6', ar:'ص 343'},
+  {id:'proto', a:'بروتوكولات طيات الجلد (7 و3 و4 مواقع)', en:'Tables 11-7, 11-8, 11-9', ar:'ص 345'},
+  {id:'dw', a:'حساب نسبة دهون الجسم بطريقة دورنين ووميرسلي', en:'Table 11-10', ar:'ص 346–347'},
+  {id:'rpe', a:'مقياس معدل الجهد المحسوس (6–20 و1–10)', en:'Tables 11-11, 11-12', ar:'ص 351'},
+  {id:'ymca', a:'اختبار الخطوة (YMCA 3-minute step test)', en:'Table 11-13', ar:'ص 352'},
+  {id:'rock', a:'القيم المعيارية لاختبار روكبورت للمشي', en:'Table 11-14', ar:'ص 353'},
+  {id:'run', a:'القيم المعيارية للجري 1.5 ميل (رجال ونساء)', en:'Tables 11-15, 11-16', ar:'ص 354–355'},
+  {id:'vt1', a:'مثال اختبار VT1 بزيادات دقيقة واحدة', en:'Table 11-17', ar:'ص 357'}
+];
+
+/* ---------- 5–8 (forms as in the academy files) ---------- */
+const DYN = [
+  {h:'القرفصاء مع رفع الذراعين إلى أعلى', rows:[
+    ['أمامي (Anterior)','القدم/الكاحل','هل تنقلب القدم للخارج؟','lr'],
+    ['أمامي (Anterior)','الركبة','حركة الركبتين: إلى الداخل؟ إلى الخارج؟','lrio'],
+    ['جانبي','مجموعة الحوض القطني الوضعي (LPHC)','هل يوجد ميل شديد إلى الأمام؟','chk'],
+    ['جانبي','مجموعة الحوض القطني الوضعي (LPHC)','هل هناك تقوّس في أسفل الظهر؟','chk'],
+    ['جانبي','الكتف','هل الذراعان متدليان إلى الأمام؟','chk']]},
+  {h:'تمرين القرفصاء برجل واحدة', rows:[['أمامي (Anterior)','الركبة','حركة الركبتين: إلى الداخل؟ إلى الخارج؟','lrio']]},
+  {h:'الدفع/السحب', rows:[
+    ['جانبي','مجموعة الحوض القطني الوضعي (LPHC)','هل هناك تقوّس في أسفل الظهر؟','pp'],
+    ['جانبي','الكتف','هل تُرفع الكتفان؟','pp'],
+    ['جانبي','الرأس/العنق','هل الرأس مقدّمة إلى الأمام؟','pp']]}
+];
+const STAT_VIEWS = ['منظر أمامي','منظر خلفي','منظر جانبي'];
+const STAT_PTS = ['القدم والكاحل','الركبة','مجموعة الحوض القطني الوضعي (LPHC)','الكتفان','الرأس والعنق'];
+const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const DAYS = ['الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'];
+const OPT_SECT = [['الإحماء',4],['التنشيط (الجذع والتوازن)',4],['تنمية المهارات (التدريب البليومتري وتمارين الرشاقة والسرعة ورد الفعل)',4],['تدريب المقاومة',8],['اختيار العميل',3],['التهدئة',3]];
+
+const FORMS = [
+  {n:1, id:'parq', a:'استبيان جاهزية النشاط البدني للجميع', s:'PAR-Q+ 2020'},
+  {n:2, id:'life', a:'استبيان حول أسلوب الحياة والتاريخ الصحي', s:'HHQ'},
+  {n:3, id:'body', a:'قياس تكوين الجسم', s:'BMI · المحيط · طيات الجلد'},
+  {n:4, id:'cardio', a:'تقييم الجهاز القلبي التنفسي', s:'النبض · الضغط · الاختبارات'},
+  {n:5, id:'dyn', a:'تقييم القوام الحركي', s:'Dynamic posture'},
+  {n:6, id:'stat', a:'تقييم وضع الجسم من الثبات', s:'Static posture'},
+  {n:7, id:'plan', a:'نموذج البرنامج السنوي والشهري/الأسبوعي', s:'الخطة السنوية والشهرية'},
+  {n:8, id:'opt', a:'نظام التدريب الأمثل®', s:'Optimum Performance Training® · خطة الجلسة'}
+];
+const NASM_CREDIT = 'النموذج مبني على نماذج وجداول NASM (National Academy of Sports Medicine) · NASM Essentials of Personal Fitness Training, 7th ed. · OPT® علامة تجارية مسجلة لـ NASM.';
+</script>
+<script>/* ===== Client file app (ملف العميل للقياسات) ===== */
+const KEY = 'nasm_client_file_v1';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const today = () => new Date().toISOString().slice(0, 10);
+const num = v => { if (v === '' || v == null) return NaN; const x = parseFloat(String(v).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(',', '.')); return isFinite(x) ? x : NaN; };
+const f1 = x => isFinite(x) ? (Math.round(x * 10) / 10).toString() : '';
+const f2 = x => isFinite(x) ? x.toFixed(2) : '';
+const secs = v => { if (!v) return NaN; const m = String(v).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/^\s*(\d+)\s*[:.]\s*(\d{1,2})\s*$/); if (m) return +m[1] * 60 + +m[2]; const n = num(v); return isFinite(n) ? n * 60 : NaN; };
+const mmss = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0') : '';
+
+/* ---------- storage ---------- */
+let S;
+function load() { try { S = JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { S = null; } if (!S) S = { trainer: {}, clients: [] }; }
+let saveT;
+function save(now) {
+  clearTimeout(saveT);
+  const go = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); toast('تم الحفظ في هذا المتصفح'); } catch (e) { toast('تعذّر الحفظ: مساحة المتصفح ممتلئة. صدّري الملفات ثم احذفي القديم.', 1); } };
+  now ? go() : (saveT = setTimeout(go, 500));
+}
+function toast(m, bad) { const t = $('#toast'); t.textContent = m; t.className = 'show' + (bad ? ' bad' : ''); clearTimeout(t._h); t._h = setTimeout(() => t.className = '', bad ? 5000 : 1300); }
+const client = id => S.clients.find(c => c.id === id);
+function get(o, p) { return p.split('.').reduce((a, k) => a == null ? undefined : a[k], o); }
+function set(o, p, v) { const ks = p.split('.'); let a = o; ks.slice(0, -1).forEach(k => { if (a[k] == null || typeof a[k] !== 'object') a[k] = {}; a = a[k]; }); a[ks.at(-1)] = v; }
+
+/* ---------- context ---------- */
+// ctx: {mode:'edit'|'blank'|'view', c: client, d: data object for this form}
+let CTX = null;
+const V = k => CTX.mode === 'blank' ? '' : (get(CTX.d, k) ?? '');
+const ro = () => CTX.mode === 'view' ? ' disabled' : '';
+function inp(k, o = {}) {
+  const t = o.t || 'text', w = o.w ? ` style="width:${o.w}"` : '', ph = o.ph ? ` placeholder="${esc(o.ph)}"` : '';
+  const im = o.im ? ` inputmode="${o.im}"` : (t === 'num' ? ' inputmode="decimal"' : '');
+  return `<input class="f ${o.cls || ''}" data-k="${k}" type="${t === 'num' || (t === 'date' && CTX.mode === 'blank') ? 'text' : t}"${im}${w}${ph} value="${esc(V(k))}"${ro()} aria-label="${esc(o.al || o.ph || k)}">`;
+}
+function area(k, o = {}) { return `<textarea class="f ta" data-k="${k}" rows="${o.rows || 2}"${ro()} aria-label="${esc(o.al || k)}">${esc(V(k))}</textarea>`; }
+function yn(k, o = {}) {
+  const v = V(k), n = 'r_' + k.replace(/\W/g, '_');
+  return `<span class="yn">${[['y', 'نعم'], ['n', 'لا']].map(([x, l]) => `<label class="rb"><input type="radio" name="${n}" data-k="${k}" value="${x}"${v === x ? ' checked' : ''}${ro()}${o.re ? ' data-re="1"' : ''}><span>${l}</span></label>`).join('')}</span>`;
+}
+function choice(k, opts, o = {}) {
+  const v = V(k), n = 'r_' + k.replace(/\W/g, '_');
+  return `<span class="yn">${opts.map(([x, l]) => `<label class="rb"><input type="radio" name="${n}" data-k="${k}" value="${x}"${v === x ? ' checked' : ''}${ro()}${o.re ? ' data-re="1"' : ''}><span>${l}</span></label>`).join('')}</span>`;
+}
+function chk(k, l) { return `<label class="cb"><input type="checkbox" data-k="${k}"${V(k) === true ? ' checked' : ''}${ro()}><span>${l}</span></label>`; }
+function sig(k, label) {
+  const v = V(k);
+  return `<div class="sigw"><div class="sigl">${label}</div><div class="sig" data-sig="${k}"><canvas></canvas>${v ? `<img src="${v}" alt="توقيع">` : ''}</div>${CTX.mode === 'edit' ? `<button type="button" class="lnk" data-sigclear="${k}">مسح التوقيع</button>` : ''}</div>`;
+}
+const out = (id, ph = '') => `<output id="o_${id}" class="out">${ph}</output>`;
+const fn = t => `<p class="fn"><b>⚠️ تصحيح:</b> ${t}</p>`;
+
+/* ---------- print header / footer ---------- */
+function sheetHead(f, extra = '') {
+  const tr = S.trainer, brand = CTX.mode !== 'blank' && (tr.name || tr.logo);
+  const c = CTX.c || {};
+  return `<header class="sh">
+    ${brand ? `<div class="tb">${tr.logo ? `<img src="${tr.logo}" alt="">` : ''}<div><b>${esc(tr.name || '')}</b>${tr.title ? `<span>${esc(tr.title)}</span>` : ''}${(tr.phone || tr.email) ? `<span class="en">${esc([tr.phone, tr.email].filter(Boolean).join(' · '))}</span>` : ''}</div></div>` : ''}
+    <div class="st"><span class="fnum">${f.n}</span><div><h2>${f.a}</h2><small>${f.s}</small></div></div>
+    <div class="who"><span>اسم العميل: <b>${CTX.mode === 'blank' ? '<i class="blankline"></i>' : esc(c.name || '')}</b></span><span>التاريخ: <b>${CTX.mode === 'blank' ? '<i class="blankline sh"></i>' : esc(extra || (CTX.d && CTX.d.date) || today())}</b></span></div>
+  </header>`;
+}
+const sheetFoot = (x = '') => `<footer class="sf">${x ? `<p>${x}</p>` : ''}<p>${NASM_CREDIT}</p></footer>`;
+
+/* ================= FORMS ================= */
+const R = {};
+
+/* ---- 1. PAR-Q+ ---- */
+function parqState(d) {
+  const p1 = PARQ.p1.map((_, i) => get(d, 'p1.' + i));
+  const done1 = p1.every(x => x === 'y' || x === 'n'), anyY = p1.includes('y');
+  let fuYes = false, fuDone = true;
+  PARQ.fu.forEach((q, i) => {
+    const m = get(d, 'fu.' + i); if (m !== 'y' && m !== 'n') fuDone = false;
+    if (m === 'y') q.s.forEach((_, j) => { const s = get(d, `fs.${i}.${j}`); if (s === 'y') fuYes = true; if (s !== 'y' && s !== 'n') fuDone = false; });
+  });
+  return { done1, anyY, fuYes, fuDone };
+}
+function parqDecl(prefix) {
+  return `<section class="box decl"><h3>إقرار المشارك</h3>${PARQ.decl.map(p => `<p>${p}</p>`).join('')}
+  <div class="grid2"><label>الاسم ${inp(prefix + '.name', { al: 'الاسم' })}</label><label>التاريخ ${inp(prefix + '.date', { t: 'date', al: 'التاريخ' })}</label></div>
+  <div class="grid2">${sig(prefix + '.sig', 'توقيع المشارك')}${sig(prefix + '.wit', 'توقيع الشاهد')}</div>
+  <div class="grid2">${sig(prefix + '.guard', 'توقيع ولي الأمر / الوصي / مقدم الرعاية (عند الحاجة)')}<label>اسم ولي الأمر / الوصي / مقدم الرعاية ${inp(prefix + '.gname', { al: 'اسم ولي الأمر' })}</label></div></section>`;
+}
+function parqPart1(blank) {
+  const st = parqState(CTX.d);
+  let h = `<section class="box"><h3>أسئلة صحية عامة</h3><p class="muted">${PARQ.intro}</p><p><b>${PARQ.p1head}</b></p>
+  <ol class="qs">${PARQ.p1.map((q, i) => `<li><div class="qt">${q.t}${q.n ? `<small>${q.n}</small>` : ''}</div>${yn('p1.' + i, { re: 1 })}${q.f ? `<div class="qx">${q.f}: ${inp('p1x.' + i, { al: q.f })}</div>` : ''}</li>`).join('')}</ol>${fn(PARQ.p1fn)}</section>`;
+  const allNo = `<section class="box ok"><h3>إذا أجبت بـ «لا» على جميع الأسئلة</h3><ul>${PARQ.allNo.map(x => `<li>${x}</li>`).join('')}</ul></section>`;
+  const yes = `<section class="box warn"><h3>إذا أجبت بنعم على سؤال أو أكثر</h3><p><b>${PARQ.anyYes}</b></p><p><b>يجب تأجيل أن تصبح أكثر نشاطًا إذا:</b></p><ul>${PARQ.delay.map(x => `<li>${x}</li>`).join('')}</ul></section>`;
+  if (blank) return h + allNo + yes + parqDecl('d1');
+  if (!st.done1) return h + `<p class="hint">أجيبي على الأسئلة السبعة لتظهر الخطوة التالية.</p>`;
+  if (!st.anyY) return h + `<div class="result good">✔ جميع الإجابات «لا»: يوقّع العميل على الإقرار، ولا يحتاج إلى الصفحتين 2 و3.</div>` + allNo + parqDecl('d1');
+  return h + `<div class="result bad">إجابة «نعم» على سؤال أو أكثر: يكمل العميل <b>أسئلة المتابعة</b> (الخطوة 2).</div>` + yes;
+}
+function parqPart2(blank) {
+  const st = parqState(CTX.d);
+  let h = `<section class="box"><h3>أسئلة المتابعة حول حالتك الطبية</h3><p><b>${PARQ.fuHead}</b></p><ol class="qs fu">`;
+  PARQ.fu.forEach((q, i) => {
+    const show = blank || V('fu.' + i) === 'y';
+    h += `<li><div class="qt"><b>${q.t}</b></div>${yn('fu.' + i, { re: 1 })}${q.fn ? fn(q.fn) : ''}`;
+    if (show) h += `<div class="subq"><small>إذا كانت الحالة أعلاه موجودة، أجب عن الأسئلة ${i + 1}أ – ${i + 1}${'أبجده'[q.s.length - 1]}:</small><ol>${q.s.map((s, j) => { const o = typeof s === 'object' ? s : { t: s }; const t = o.t === 'CTRL' ? PARQ.ctrl : o.t; return `<li><span class="sl">${i + 1}${'أبجده'[j]}</span><div class="qt">${t}</div>${yn(`fs.${i}.${j}`, { re: 1 })}${o.fn ? fn(o.fn) : ''}</li>`; }).join('')}</ol></div>`;
+    else if (V('fu.' + i) === 'n') h += `<small class="muted">لا ← انتقل إلى السؤال ${i + 2 <= 10 ? i + 2 : 'التالي'}</small>`;
+    h += `</li>`;
+  });
+  h += `</ol></section>`;
+  const ready = `<section class="box ok"><h3>إذا أجبت بـ «لا» على جميع أسئلة المتابعة</h3><ul>${PARQ.readyNo.map(x => `<li>${x}</li>`).join('')}</ul></section>`;
+  const more = `<section class="box warn"><h3>إذا أجبت بنعم على سؤال متابعة أو أكثر</h3><p><b>${PARQ.someYes}</b></p><p><b>يجب تأخير أن تصبح أكثر نشاطًا إذا:</b></p><ul>${PARQ.delay2.map(x => `<li>${x}</li>`).join('')}</ul></section>`;
+  const notes = `<section class="box"><ul class="muted">${PARQ.notes.map(x => `<li>${x}</li>`).join('')}</ul></section>`;
+  if (blank) return h + ready + more + notes + parqDecl('d2');
+  if (!st.fuDone) return h + `<p class="hint">أكملي أسئلة المتابعة لتظهر التوصية والإقرار.</p>`;
+  return h + (st.fuYes ? `<div class="result bad">إجابة «نعم» في أسئلة المتابعة: يحتاج العميل إلى مزيد من المعلومات/إذن طبي قبل زيادة النشاط أو إجراء تقييم اللياقة. لا تشخيص ولا افتراضات؛ يُحال إلى مقدم الرعاية الطبية.</div>` + more : `<div class="result good">✔ جميع إجابات المتابعة «لا»: العميل جاهز لأن يصبح أكثر نشاطًا بدنيًا.</div>` + ready) + notes + parqDecl('d2');
+}
+R.parq = {
+  body(part) {
+    const f = FORMS[0];
+    if (CTX.mode === 'blank') {
+      if (part === 2) return sheetHead({ ...f, a: f.a + ' – أسئلة المتابعة', s: 'PAR-Q+ 2020 · الصفحات 2–4' }) + parqPart2(true) + sheetFoot(PARQ.credit);
+      return sheetHead({ ...f, s: 'PAR-Q+ 2020 · الصفحة 1' }) + parqPart1(true) + sheetFoot(PARQ.credit);
+    }
+    const st = parqState(CTX.d);
+    let h = sheetHead(f) + `<div class="steps2"><span class="on">الخطوة 1: الأسئلة السبعة</span><span class="${st.done1 && st.anyY ? 'on' : 'off'}">الخطوة 2: أسئلة المتابعة</span></div>` + parqPart1();
+    if (st.done1 && st.anyY) h += `<div class="pb"></div>` + sheetHead({ ...f, a: f.a + ' – أسئلة المتابعة', s: 'PAR-Q+ 2020 · الخطوة 2' }) + parqPart2();
+    return h + sheetFoot(PARQ.credit);
+  },
+  status(d) { if (!d) return 0; const s = parqState(d); if (!s.done1) return 0; if (!s.anyY) return get(d, 'd1.sig') ? 2 : 1; return s.fuDone && get(d, 'd2.sig') ? 2 : 1; },
+  verdict(d) { const s = parqState(d || {}); if (!s.done1) return ''; if (!s.anyY) return 'جاهز (كل الإجابات لا)'; if (!s.fuDone) return 'أسئلة المتابعة غير مكتملة'; return s.fuYes ? 'يحتاج إذنًا طبيًا / مزيد من المعلومات' : 'جاهز بعد أسئلة المتابعة'; }
+};
+
+/* ---- 2. Lifestyle ---- */
+R.life = {
+  body() {
+    const f = FORMS[1], c = CTX.c || {};
+    const pv = k => CTX.mode === 'blank' ? '<i class="blankline"></i>' : esc(c[k] || '');
+    let h = sheetHead(f) + `<section class="box"><h3>المعلومات الشخصية للعميل</h3>
+      <div class="grid4"><span>العمر: <b>${pv('age')}</b></span><span>الجنس: <b>${CTX.mode === 'blank' ? '<i class="blankline"></i>' : (c.sex === 'f' ? 'أنثى' : c.sex === 'm' ? 'ذكر' : '')}</b></span><span>الطول (سم): <b>${pv('height')}</b></span><span>الوزن (كجم): <b>${pv('weight')}</b></span></div>
+      ${CTX.mode !== 'blank' ? '<p class="muted np">العمر والجنس والطول والوزن تُعدَّل من صفحة بيانات العميل.</p>' : ''}
+      <div class="grid2"><label>اسم الطبيب ورقم الهاتف ${inp('doc')}</label><label>اسم جهة اتصال الطوارئ ورقم الهاتف ${inp('emer')}</label></div></section>`;
+    LIFE.forEach(sec => {
+      h += `<section class="box"><h3>${sec.h}</h3><ol class="qs plain">`;
+      sec.q.forEach(q => {
+        let a = '';
+        if (q.ty === 't') a = inp(q.id);
+        else if (q.ty === 'ta') a = area(q.id);
+        else if (q.ty === 'n') a = inp(q.id, { t: 'num', w: '8em' });
+        else if (q.ty === 's10') a = `<span class="scale">${inp(q.id, { t: 'num', w: '4em', ph: '0–10' })} / 10</span>`;
+        else if (q.ty === 'lmh') a = choice(q.id, [['l', 'منخفض'], ['m', 'متوسط'], ['h', 'مرتفع']]);
+        else if (q.ty === 'yn') a = yn(q.id) + (q.x ? `<div class="qx">${q.x}: ${inp(q.id + '_x')}</div>` : '');
+        else if (q.ty === 'goals') a = `<div class="goals">${q.items.map((g, i) => `<label>${g}: ${inp(q.id + '.' + i, { t: 'num', w: '4em', ph: '0–10' })}</label>`).join('')}</div>`;
+        h += `<li><div class="qt">${q.t}</div>${a}${q.hint ? `<p class="tip np">💡 ${q.hint}</p>` : ''}</li>`;
+      });
+      h += `</ol></section>`;
+    });
+    return h + sheetFoot('سرية المعلومات: لا تُشارك أي معلومات تم جمعها دون موافقة كتابية من العميل، وتُحفظ بأمان بعيدًا عن الزملاء والعامة (الكتاب ص 328).');
+  },
+  status(d) { if (!d) return 0; const n = LIFE.flatMap(s => s.q).filter(q => { const v = d[q.id]; return v !== undefined && v !== '' && !(typeof v === 'object' && !Object.values(v).some(Boolean)); }).length; return n === 0 ? 0 : n >= 20 ? 2 : 1; }
+};
+
+/* ---- calculations ---- */
+const clsBMI = b => T.bmi.find(r => b < r.max);
+function clsBP(s, d) {
+  if (!(isFinite(s) && isFinite(d))) return null;
+  if (s > 180 || d > 120) return T.bp[4]; if (s >= 140 || d >= 90) return T.bp[3]; if (s >= 130 || d >= 80) return T.bp[2]; if (s >= 120) return T.bp[1]; return T.bp[0];
+}
+const avg2 = (a, b) => { a = num(a); b = num(b); return isFinite(a) && isFinite(b) ? (a + b) / 2 : isFinite(a) ? a : isFinite(b) ? b : NaN; };
+function bodyFat(proto, sex, age, sum) {
+  if (!isFinite(sum) || !isFinite(age) || !sex) return null;
+  let bd;
+  if (proto === 'jp7') bd = sex === 'm' ? 1.112 - 0.00043499 * sum + 0.00000055 * sum * sum - 0.00028826 * age : 1.097 - 0.00046971 * sum + 0.00000056 * sum * sum - 0.00012828 * age;
+  else if (proto === 'jp3') bd = sex === 'm' ? 1.10938 - 0.0008267 * sum + 0.0000016 * sum * sum - 0.0002574 * age : 1.0994921 - 0.0009929 * sum + 0.0000023 * sum * sum - 0.0001392 * age;
+  else { const r = DW[sex].find(x => age <= x[0]); bd = r[1] - r[2] * Math.log10(sum); }
+  return { bd, bf: 495 / bd - 450 };
+}
+const rangeHi = s => { const p = s.split('–'); return Math.max(secs(p[0].replace(/[<>]/g, '')), secs((p[1] || p[0]).replace(/[<>]/g, ''))); };
+function ymcaRate(sex, age, hr) {
+  if (!sex || !isFinite(age) || !isFinite(hr) || age < 18) return null;
+  const ai = age <= 25 ? 0 : age <= 35 ? 1 : age <= 45 ? 2 : age <= 55 ? 3 : age <= 65 ? 4 : 5;
+  const tb = T.ymca[sex]; let i = tb.findIndex(r => hr <= Math.max(...r[ai])); if (i < 0) i = 6; return { i, ai };
+}
+function rockRate(sex, age, s) { if (!sex || !isFinite(s)) return null; const up = sex === 'm' ? T.rock.mUp : T.rock.fUp; return { i: up.findIndex(u => s <= u), out: !(age >= 30 && age <= 69) }; }
+function runRate(sex, age, s) {
+  if (!sex || !isFinite(age) || !isFinite(s) || age < 20 || age > 69) return null;
+  const ai = Math.min(4, Math.floor((age - 20) / 10)); const tb = T.run[sex]; let i = tb.findIndex(r => s <= rangeHi(r[ai])); if (i < 0) i = 5; return { i, ai };
+}
+function bar(cats, i, good = 'خضراء') {
+  return `<div class="rbar">${cats.map((c, k) => `<span class="${k === i ? 'on' : ''}" style="--h:${Math.round(130 - 130 * k / (cats.length - 1))}">${c}</span>`).join('')}</div>`;
+}
+
+/* ---- 3. Body composition ---- */
+R.body = {
+  body() {
+    const f = FORMS[2], c = CTX.c || {}, bl = CTX.mode === 'blank';
+    let h = sheetHead(f) + `<section class="box"><div class="grid4">
+      <label>الطول (سم) ${inp('h', { t: 'num', w: '6em' })}</label><label>الوزن (كجم) ${inp('w', { t: 'num', w: '6em' })}</label>
+      <span>مؤشر كتلة الجسم (BMI): ${out('bmi')}</span><span>${out('bmic')}</span></div>
+      ${bl ? '' : `<p class="muted np">الجنس: <b>${c.sex === 'f' ? 'أنثى' : c.sex === 'm' ? 'ذكر' : '—'}</b> · العمر: <b>${esc(c.age || '—')}</b> (من بيانات العميل؛ تُستخدم في التصنيف والمعادلات).</p>`}
+      <p class="tip np">BMI = الوزن (كجم) ÷ [الطول (م)]². أقل خطر 22–24.9. لا يفرّق بين الدهون والكتلة الخالية من الدهون (الجدول 11-2).</p></section>
+      <section class="box"><h3>قياس محيط الجسم (سم)</h3><table class="ft"><thead><tr><th>الموقع</th><th>القياس 1</th><th>القياس 2</th><th>المتوسط</th></tr></thead><tbody>
+      ${CIRC.map(s => `<tr><td><b>${s.a}</b><small>${s.d}</small></td><td>${inp('c.' + s.id + '.1', { t: 'num', al: s.a + ' 1' })}</td><td>${inp('c.' + s.id + '.2', { t: 'num', al: s.a + ' 2' })}</td><td>${out('ca_' + s.id)}</td></tr>`).join('')}
+      </tbody></table>
+      <div class="grid2"><span>خطر محيط الخصر (الجدول 11-3): ${out('wr')}</span><span>نسبة الخصر إلى الحوض (WHR) = الخصر ÷ الوركان: ${out('whr')} ${out('whrc')}</span></div>
+      ${fn(CIRC_FN)}</section>
+      <section class="box"><h3>أداة لقياس سمك طيات الجلد (ملم) <span class="en">Skinfold measurements</span></h3>
+      <label>البروتوكول: ${choice('proto', Object.entries(PROTO).map(([k, p]) => [k, p.a.replace('بروتوكول ', '')]), { re: 1 })}</label>
+      <table class="ft"><thead><tr><th>الموقع</th><th>القياس 1</th><th>القياس 2</th><th>المتوسط</th></tr></thead><tbody>`;
+    const pr = PROTO[V('proto')], need = pr && c.sex ? pr[c.sex] : null;
+    SKF.forEach(s => { const off = !bl && need && !need.includes(s.id); h += `<tr class="${off ? 'off' : ''}"><td><b>${s.a}</b><small>${s.d}</small></td><td>${inp('s.' + s.id + '.1', { t: 'num', al: s.a + ' 1' })}</td><td>${inp('s.' + s.id + '.2', { t: 'num', al: s.a + ' 2' })}</td><td>${off ? '<small>غير مطلوب</small>' : out('sa_' + s.id)}</td></tr>`; });
+    h += `<tr class="sum"><td><b>المجموع</b></td><td colspan="2">${bl ? '' : '<small>مجموع متوسطات المواقع المطلوبة</small>'}</td><td>${out('ssum')}</td></tr></tbody></table>
+      <div class="grid2"><span><b>دهون الجسم %:</b> ${out('bf')}</span><span>${out('bfc')}</span></div>
+      <p class="tip">قياسان على الأقل لكل موقع والفرق بينهما 1–2 ملم. لا قياس بعد التمرين مباشرة، وتجنبي القياس للبدناء. النسبة الصحية: الرجال 10% – 20%، النساء 20% – 30%.</p>
+      <label class="np">أو نسبة الدهون من جهاز المعاوقة الكهربائية الحيوية (BIA) %: ${inp('bia', { t: 'num', w: '6em' })}</label></section>`;
+    return h + sheetFoot('الحساب: جاكسون وبولوك (7 و3 مواقع) بمعادلات Jackson & Pollock مع معادلة Siri؛ دورنين ووميرسلي مطابق للجدول 11-10 في الكتاب. الكتاب يحيل لحساب النسبة إلى مصادر خارجية.');
+  },
+  calc(root = document) {
+    const d = CTX.d, c = CTX.c || {}, o = (id, v) => { const e = root.querySelector('#o_' + id); if (e) e.innerHTML = v; };
+    const hgt = num(d.h), w = num(d.w), b = w / Math.pow(hgt / 100, 2);
+    if (isFinite(b)) { const k = clsBMI(b); o('bmi', `<b>${f2(b)}</b>`); o('bmic', `<span class="pill c${k.c}">${k.k} · خطر ${k.r}</span>`); } else { o('bmi', ''); o('bmic', ''); }
+    const ca = {}; CIRC.forEach(s => { ca[s.id] = avg2(get(d, `c.${s.id}.1`), get(d, `c.${s.id}.2`)); o('ca_' + s.id, f1(ca[s.id])); });
+    if (isFinite(ca.waist) && c.sex) { const r = T.waist[c.sex].find(x => ca.waist < x[0]); o('wr', `<span class="pill c${r[2]}">${r[1]}</span>`); } else o('wr', c.sex ? '' : '<small>حدّدي الجنس</small>');
+    const whr = ca.waist / ca.hips;
+    if (isFinite(whr)) { o('whr', `<b>${f2(whr)}</b>`); if (c.sex) { const r = T.whr[c.sex].find(x => +whr.toFixed(2) <= x[0]); o('whrc', `<span class="pill c${r[2]}">${r[1]}</span>`); } } else { o('whr', ''); o('whrc', ''); }
+    const pr = PROTO[d.proto]; let sum = 0, ok = !!(pr && c.sex);
+    SKF.forEach(s => { const a = avg2(get(d, `s.${s.id}.1`), get(d, `s.${s.id}.2`)); o('sa_' + s.id, f1(a)); if (pr && c.sex && pr[c.sex].includes(s.id)) { if (isFinite(a)) sum += a; else ok = false; } });
+    if (!pr) { o('ssum', ''); o('bf', ''); o('bfc', '<small>اختاري البروتوكول</small>'); return; }
+    if (!c.sex || !c.age) { o('ssum', ''); o('bf', ''); o('bfc', '<small>أدخلي جنس العميل وعمره في بياناته</small>'); return; }
+    o('ssum', ok ? `<b>${f1(sum)}</b>` : '');
+    const r = ok ? bodyFat(d.proto, c.sex, num(c.age), sum) : null;
+    if (r) { const bf = r.bf, lo = c.sex === 'm' ? 10 : 20, hi = c.sex === 'm' ? 20 : 30; o('bf', `<b>${f2(bf)}%</b>`); o('bfc', `<span class="pill ${bf < lo ? 'c2' : bf <= hi ? 'c0' : 'c3'}">${bf < lo ? 'أقل من' : bf <= hi ? 'ضمن' : 'أعلى من'} النطاق الصحي (${lo}% – ${hi}%)</span>${d.proto === 'dw4' && (num(c.age) < 17 || num(c.age) > 49) ? '<small class="warn"> دورنين ووميرسلي الأفضل لعمر 17–49</small>' : ''}`); }
+    else { o('bf', ''); o('bfc', '<small>أكملي المواقع المطلوبة</small>'); }
+  },
+  status(d) { return !d ? 0 : (d.w && d.h ? (d.proto ? 2 : 1) : (Object.keys(d).length > 2 ? 1 : 0)); }
+};
+
+/* ---- 4. Cardio ---- */
+R.cardio = {
+  body() {
+    const f = FORMS[3];
+    let h = sheetHead(f) + `<section class="box"><div class="grid3">
+      <label>معدل ضربات القلب أثناء الراحة (نبضة/دقيقة) ${inp('rhr', { t: 'num', w: '6em' })}</label>
+      <label>ضربات القلب القصوى (تقدير) ${inp('mhr', { t: 'num', w: '6em' })}</label>
+      <label>ضغط الدم (ملم زئبق) <span class="bp">${inp('sbp', { t: 'num', w: '4.5em', ph: 'انقباضي' })} / ${inp('dbp', { t: 'num', w: '4.5em', ph: 'انبساطي' })}</span></label></div>
+      <p>تصنيف ضغط الدم (الجدول 11-1): ${out('bpc')}</p>
+      <p class="tip np">RHR: بالنبض الكعبري، بالسبابة والوسطى، لمدة 60 ثانية (أدق وقت: صباحًا قبل النهوض). ضربات القلب القصوى: تُدخل يدويًا حاليًا، ويُضاف حسابها عند الفصل المختص.</p></section>
+      <section class="box"><h3>اختبار الخطوة (YMCA 3-minute step test)</h3>
+      <label>انتعاش معدل ضربات القلب (عدد النبضات خلال 60 ثانية): ${inp('ymca', { t: 'num', w: '6em' })}</label>${out('ymcab')}
+      <p class="tip">صندوق 12 إنش (30 سم)، 96 خطوة/دقيقة لمدة 3 دقائق، ثم جس النبض الكعبري خلال 5 ثوانٍ والعد 60 ثانية (العد يبدأ من الصفر). الجدول 11-13.</p></section>
+      <section class="box"><h3>اختبار روكبورت للمشي (Rockport walk test)</h3>
+      <div class="grid2"><label>الوقت (دقيقة:ثانية) ${inp('rock', { w: '6em', ph: '12:30', im: 'decimal' })}</label><label>معدل ضربات القلب ${inp('rockhr', { t: 'num', w: '6em' })}</label></div>${out('rockb')}
+      <p class="tip">مشي 1 ميل (1.6 كم) بأسرع ما يمكن، بدون جري. المعايير لعمر 30–69 (الجدول 11-14).</p></section>
+      <section class="box"><h3>الجري مسافة 1.5 ميل (2.4 كم)</h3>
+      <div class="grid2"><label>الوقت (دقيقة:ثانية) ${inp('run', { w: '6em', ph: '11:45', im: 'decimal' })}</label><label>معدل ضربات القلب ${inp('runhr', { t: 'num', w: '6em' })}</label></div>${out('runb')}
+      <p class="tip">للأعلى لياقة. المعايير لعمر 20–69 (الجدولان 11-15 و11-16).</p></section>
+      <section class="box"><h3>اختبار الحديث (Talk test): عتبة التهوية 1 و2 (VT1/VT2)</h3>
+      <div class="grid3"><label>الوقت حتى VT1 ${inp('vt1t', { w: '6em' })}</label><label>معدل ضربات القلب في VT1 ${inp('vt1hr', { t: 'num', w: '6em' })}</label><label>السرعة / الميل / الواط عند VT1 ${inp('vt1w', { w: '8em' })}</label></div>
+      <h4>VT2: اختبار 20 دقيقة · النبض في آخر 5 دقائق</h4>
+      <div class="grid5">${[16, 17, 18, 19, 20].map(m => `<label>الدقيقة ${m} ${inp('vt2.' + m, { t: 'num', w: '5em' })}</label>`).join('')}</div>
+      <p>المتوسط: ${out('vt2a')} × 0.95 = <b>VT2</b> ${out('vt2')}</p>
+      <div class="grid2"><label>الوقت حتى VT2 / مؤشر الأداء ${inp('vt2t', { w: '8em' })}</label><label>أو إدخال VT2 يدويًا ${inp('vt2m', { t: 'num', w: '6em' })}</label></div>
+      <p class="tip">VT1: يصبح التحدث المتواصل «صعبًا لكن ممكنًا» (50% دهون و50% كربوهيدرات). VT2: لأصحاب أهداف الأداء فقط؛ متوسط آخر 5 دقائق × 0.95 (الكتاب ص 357–358).</p></section>
+      <section class="box np"><h3>معايير إنهاء الاختبار (الشكل 11-3)</h3><ol class="small">${T.term.map(x => `<li>${x}</li>`).join('')}</ol></section>`;
+    return h + sheetFoot();
+  },
+  calc(root = document) {
+    const d = CTX.d, c = CTX.c || {}, sex = c.sex, age = num(c.age), o = (id, v) => { const e = root.querySelector('#o_' + id); if (e) e.innerHTML = v; };
+    const b = clsBP(num(d.sbp), num(d.dbp)); o('bpc', b ? `<span class="pill c${b.c}">${b.k}</span> <small>${b.r}</small>` : '');
+    const need = sex && isFinite(age) ? '' : '<small>أدخلي جنس العميل وعمره في بياناته</small>';
+    const y = ymcaRate(sex, age, num(d.ymca)); o('ymcab', num(d.ymca) ? (y ? bar(T.ymcaCats, y.i) + `<small>الفئة العمرية ${T.ymcaAges[y.ai]}</small>` : need || '<small>لا توجد معايير لهذا العمر</small>') : '');
+    const r = rockRate(sex, age, secs(d.rock)); o('rockb', d.rock ? (r ? bar(T.rockCats, r.i) + (r.out ? '<small class="warn">العمر خارج 30–69: التصنيف للاسترشاد فقط</small>' : '') : need) : '');
+    const u = runRate(sex, age, secs(d.run)); o('runb', d.run ? (u ? bar(T.runCats, u.i) + `<small>الفئة العمرية ${T.runAges[u.ai]}</small>` : need || '<small>لا توجد معايير لهذا العمر (20–69)</small>') : '');
+    const v = [16, 17, 18, 19, 20].map(m => num(get(d, 'vt2.' + m))).filter(isFinite);
+    if (v.length) { const a = v.reduce((x, y) => x + y, 0) / v.length; o('vt2a', f1(a)); o('vt2', `<b>${Math.round(a * 0.95)}</b> نبضة/دقيقة` + (v.length < 5 ? ' <small>(أقل من 5 قراءات)</small>' : '')); } else { o('vt2a', ''); o('vt2', ''); }
+  },
+  status(d) { return !d ? 0 : ['rhr', 'sbp', 'ymca', 'rock', 'run', 'vt1hr'].filter(k => d[k]).length >= 3 ? 2 : Object.keys(d).length > 1 ? 1 : 0; }
+};
+
+/* ---- 5. Dynamic posture ---- */
+R.dyn = {
+  body() {
+    const f = FORMS[4];
+    let h = sheetHead(f);
+    DYN.forEach((t, ti) => {
+      h += `<section class="box"><h3>${t.h}</h3><table class="ft"><thead><tr><th>العرض</th><th>نقاط تفتيش السلسلة الحركية</th><th>الملاحظة</th><th>ملاحظات</th></tr></thead><tbody>`;
+      t.rows.forEach((r, ri) => {
+        const k = `t${ti}.${ri}`;
+        let a = r[3] === 'lr' ? chk(k + '.l', 'اليسرى') + chk(k + '.r', 'اليمنى')
+          : r[3] === 'lrio' ? `<div>${chk(k + '.li', 'اليسرى للداخل')}${chk(k + '.ri', 'اليمنى للداخل')}</div><div>${chk(k + '.lo', 'اليسرى للخارج')}${chk(k + '.ro', 'اليمنى للخارج')}</div>`
+          : r[3] === 'pp' ? chk(k + '.push', 'الدفع') + chk(k + '.pull', 'السحب') : chk(k + '.y', 'نعم');
+        h += `<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td><td>${a}${inp(k + '.n', { ph: 'ملاحظة' })}</td></tr>`;
+      });
+      h += `</tbody></table></section>`;
+    });
+    h += `<section class="box"><p class="muted">لتحديد العضلات مفرطة النشاط (Overactive) أو الخاملة (Underactive)، قارني ملاحظاتك بالرسم البياني لحلول تقييم الوضعية.</p>
+      <label>عضلات مفرطة النشاط ${area('over')}</label><label>عضلات خاملة ${area('under')}</label>
+      <p class="tip np">سيُضاف اقتراح العضلات تلقائيًا عند دراسة فصل تقييم الوضعية والحركة (المرحلة 2).</p></section>`;
+    return h + sheetFoot();
+  },
+  status(d) { return d && Object.keys(d).length > 1 ? (d.over || d.under ? 2 : 1) : 0; }
+};
+
+/* ---- 6. Static posture ---- */
+R.stat = {
+  body() {
+    const f = FORMS[5];
+    let h = sheetHead(f);
+    STAT_VIEWS.forEach((v, vi) => {
+      h += `<section class="box"><h3>${v}</h3><table class="ft"><thead><tr><th style="width:40%">نقاط تفتيش السلسلة الحركية</th><th>الملاحظات</th></tr></thead><tbody>${STAT_PTS.map((p, pi) => `<tr><td><b>${p}</b></td><td>${inp(`v${vi}.${pi}`, { al: v + ' ' + p })}</td></tr>`).join('')}</tbody></table></section>`;
+    });
+    h += `<section class="box"><h3>هل هناك دليل على متلازمة التشوه القوامي؟</h3><div class="grid3">
+      ${chk('pds.l', 'التقعر القطني')}${chk('pds.k', 'التحدب الظهري')}${chk('pds.f', 'متلازمة القدم المسطحة (Pes planus distortion syndrome)')}</div>${inp('pds.n', { ph: 'ملاحظات' })}
+      <label>عضلات يحتمل أن تكون <b>نشطة</b> ${area('over')}</label><label>عضلات يحتمل أن تكون <b>غير نشطة</b> ${area('under')}</label></section>`;
+    return h + sheetFoot();
+  },
+  status(d) { return d && Object.keys(d).length > 1 ? 1 : 0; }
+};
+
+/* ---- 7. Annual / monthly plan ---- */
+R.plan = {
+  land: true,
+  body() {
+    const f = FORMS[6];
+    const lv = [['الثبات/الاستقرار (Stabilization)', 1], ['القوة (Strength)', 2], ['', 3], ['', 4], ['القدرة (Power)', 5]];
+    let h = sheetHead(f) + `<section class="box"><div class="grid2"><label>الاسم المهني (المدرب) ${inp('pro')}</label><label>الهدف ${inp('goal')}</label></div></section>
+      <section class="box"><h3>الخطة السنوية</h3><div class="sx"><table class="ft grid"><thead><tr><th>المستوى</th><th>المرحلة</th>${MONTHS.map(m => `<th>${m}</th>`).join('')}</tr></thead><tbody>
+      ${lv.map(([l, p]) => `<tr><td>${l}</td><td>${p}</td>${MONTHS.map((_, m) => `<td class="c">${chk(`y.${p}.${m}`, '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>
+      <section class="box"><h3>الخطة الشهرية/الأسبوعية</h3><label>الشهر ${inp('month', { w: '10em' })}</label><div class="sx"><table class="ft grid sm"><thead><tr><th>الأسبوع</th>${[1, 2, 3, 4].map(w => `<th colspan="7">${w}</th>`).join('')}</tr>
+      <tr><th>المرحلة / اليوم</th>${[1, 2, 3, 4].map(() => DAYS.map(d => `<th class="v">${d}</th>`).join('')).join('')}</tr></thead><tbody>
+      ${['1', '2', '3', '4', '5', 'التمارين القلبية', 'إعادة التقييم'].map((r, ri) => `<tr><td>${r}</td>${[0, 1, 2, 3].map(w => DAYS.map((_, d) => `<td class="c">${chk(`m.${ri}.${w}.${d}`, '')}</td>`).join('')).join('')}</tr>`).join('')}
+      </tbody></table></div></section>`;
+    return h + sheetFoot();
+  },
+  status(d) { return d && Object.keys(d).length > 1 ? 1 : 0; }
+};
+
+/* ---- 8. OPT session ---- */
+R.opt = {
+  body() {
+    const f = FORMS[7];
+    let h = sheetHead(f) + `<section class="box"><div class="grid2"><label>الهدف ${inp('goal')}</label><label>المرحلة ${inp('phase')}</label></div></section>
+      <section class="box"><table class="ft opt"><thead><tr><th style="width:34%">التمرين</th><th>المجموعات</th><th>التكرارات</th><th>السرعة</th><th>الراحة</th><th style="width:22%">ملاحظات</th></tr></thead><tbody>`;
+    OPT_SECT.forEach(([s, n], si) => {
+      h += `<tr class="sec"><td colspan="6">${s}</td></tr>`;
+      for (let r = 0; r < n; r++) h += `<tr>${['ex', 'sets', 'reps', 'tempo', 'rest', 'note'].map(c => `<td>${inp(`r.${si}.${r}.${c}`, { al: s + ' ' + c })}</td>`).join('')}</tr>`;
+    });
+    h += `</tbody></table><label>نصائح التدريب ${area('tips', { rows: 3 })}</label></section>`;
+    return h + sheetFoot();
+  },
+  status(d) { return d && Object.keys(d).length > 1 ? 1 : 0; }
+};
+
+/* ================= REFERENCE TABLES ================= */
+function tblWrap(t, inner) { return `<article class="sheet ref"><header class="sh"><div class="st"><span class="fnum">📋</span><div><h2>${t.a}</h2><small class="en">${REF} · ${t.en}</small></div></div><div class="who"><span>الكتاب العربي: ${t.ar}</span></div></header>${inner}<footer class="sf"><p>المرجع: <span class="en">${REF} · ${t.en}</span> · الكتاب العربي (الفصل 11) ${t.ar}.</p></footer></article>`; }
+const TB = {
+  rationale: () => `<table class="ft"><tbody>${T.rationale.map(r => `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`,
+  term: () => `<ol>${T.term.map(x => `<li>${x}</li>`).join('')}</ol>`,
+  pre: () => `<table class="ft"><tbody>${T.pre.map(r => `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`,
+  bp: () => `<table class="ft"><thead><tr><th>التصنيف</th><th>الانقباضي (ملم زئبق)</th><th>الانبساطي (ملم زئبق)</th><th>التوصية</th></tr></thead><tbody>${T.bp.map(r => `<tr><td><span class="pill c${r.c}">${r.k}</span></td><td>${r.s}</td><td>${r.d}</td><td>${r.r}</td></tr>`).join('')}</tbody></table><p class="fn"><b>⚠️ ملاحظة:</b> في المرحلتين 1 و2 يكفي أن يكون أحد الرقمين في المدى (أو)، كما في ملف أخطاء المنهج.</p>`,
+  bmi: () => `<table class="ft"><thead><tr><th>BMI</th><th>خطر الإصابة بالمرض</th><th>التصنيف</th></tr></thead><tbody>${[['أقل من 18.5'], ['18.5–24.9'], ['25.0–29.9'], ['30.0–34.9'], ['35.0–39.9'], ['40 أو أكثر']].map((x, i) => `<tr><td>${x[0]}</td><td>${T.bmi[i].r}</td><td><span class="pill c${T.bmi[i].c}">${T.bmi[i].k}</span></td></tr>`).join('')}</tbody></table><p>المتري: الوزن (كجم) ÷ [الطول (م)]². الإمبراطوري: 703 × الوزن (رطل) ÷ [الطول (إنش)]². أقل خطر: 22–24.9.</p>`,
+  waist: () => `<table class="ft"><thead><tr><th>تصنيف الخطر</th><th>النساء</th><th>الرجال</th></tr></thead><tbody><tr><td>منخفض جدًا</td><td>أقل من 70 سم (27.5 إنش)</td><td>أقل من 80 سم (31.5 إنش)</td></tr><tr><td>منخفض</td><td>70–89 سم</td><td>80–99 سم</td></tr><tr><td>عالٍ</td><td>90–109 سم</td><td>100–120 سم</td></tr><tr><td>مرتفع جدًا</td><td>110 سم أو أكثر</td><td>أكثر من 120 سم</td></tr></tbody></table><p>خطر أعلى: الرجال 100 سم (~40 إنش) أو أكثر، النساء 88 سم (~35 إنش) أو أكثر.</p>`,
+  whr: () => `<table class="ft"><thead><tr><th>الخطر الصحي</th><th>الرجال</th><th>النساء</th></tr></thead><tbody><tr><td>منخفض</td><td>0.95 أو أقل</td><td>0.80 أو أقل</td></tr><tr><td>متوسط</td><td>0.96–1.0</td><td>0.81–0.85</td></tr><tr><td>عالٍ</td><td>1.0 أو أعلى</td><td>0.86 أو أعلى</td></tr></tbody></table><p>WHR = مقاس الخصر ÷ مقاس الحوض (الوركين).</p>`,
+  circ: () => `<table class="ft"><thead><tr><th>الموقع</th><th>وصف المكان</th></tr></thead><tbody>${CIRC.map(s => `<tr><td><b>${s.a}</b></td><td>${s.d}</td></tr>`).join('')}</tbody></table>`,
+  skf: () => `<table class="ft"><thead><tr><th>الموقع</th><th>الطية والمكان</th></tr></thead><tbody>${SKF.map(s => `<tr><td><b>${s.a}</b></td><td>${s.d}</td></tr>`).join('')}</tbody></table>`,
+  proto: () => { const nm = id => SKF.find(s => s.id === id).a.replace(/ \(.*\)/, ''); return `<table class="ft"><thead><tr><th>البروتوكول</th><th>الرجال</th><th>النساء</th></tr></thead><tbody>${Object.values(PROTO).map(p => `<tr><td><b>${p.a}</b><small>${p.t}</small></td><td>${p.m.map(nm).join('، ')}</td><td>${p.f.map(nm).join('، ')}</td></tr>`).join('')}</tbody></table><ul><li>7 مواقع: الأدق، وأكثر إزعاجًا (للفئات الإكلينيكية والرياضية).</li><li>3 مواقع: صالح وأقل إزعاجًا.</li><li>دورنين ووميرسلي: الجزء العلوي فقط، الأفضل لعمر 17–49.</li></ul>`; },
+  dw: () => { const ages = ['أقل من 19', '20–29', '30–39', '40–49', '50+'], ag = [17, 25, 35, 45, 55]; let r = ''; for (let s = 5; s <= 200; s += 5) { r += `<tr><td><b>${s}</b></td>${['m', 'f'].map(x => ag.map(a => `<td>${bodyFat('dw4', x, a, s).bf.toFixed(2)}</td>`).join('')).join('')}</tr>`; } return `<div class="sx"><table class="ft dwt"><thead><tr><th rowspan="2">مجموع الطيات</th><th colspan="5">الرجال</th><th colspan="5">النساء</th></tr><tr>${ages.map(a => `<th>${a}</th>`).join('')}${ages.map(a => `<th>${a}</th>`).join('')}</tr></thead><tbody>${r}</tbody></table></div><p>مثال الكتاب: امرأة 40 عامًا، مجموع الطيات 40 ← 28.14%. الجدول محسوب بمعادلة دورنين ووميرسلي ويطابق أرقام الكتاب.</p>`; },
+  rpe: () => `<div class="grid2"><table class="ft"><thead><tr><th colspan="2">المقياس الأصلي 6–20 (الجدول 11-11)</th></tr></thead><tbody>${T.rpe20.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table><table class="ft"><thead><tr><th>التصنيف</th><th>مستوى الجهد المحسوس (الجدول 11-12)</th></tr></thead><tbody>${T.rpe10.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table></div><p>NASM توصي بمقياس 1–10.</p>`,
+  ymca: () => ['m', 'f'].map(s => `<h3>${s === 'm' ? 'الرجال' : 'النساء'} (العمر)</h3><table class="ft"><thead><tr><th>التصنيف</th>${T.ymcaAges.map(a => `<th>${a}</th>`).join('')}</tr></thead><tbody>${T.ymcaCats.map((c, i) => `<tr><td><b>${c}</b></td>${T.ymca[s][i].map(r => `<td>${r[0]}–${r[1]}</td>`).join('')}</tr>`).join('')}</tbody></table>`).join('') + `<p class="fn"><b>⚠️ ملاحظة:</b> «فوق المتوسط» للرجال 36–45 مكتوبة 92–88 في الكتاب الإنجليزي والعربي.</p>`,
+  rock: () => `<table class="ft"><thead><tr><th>التصنيف</th><th>الرجال (30–69) دقيقة:ثانية</th><th>النساء (30–69)</th></tr></thead><tbody>${T.rockCats.map((c, i) => `<tr><td><b>${c}</b></td><td>${T.rock.m[i]}</td><td>${T.rock.f[i]}</td></tr>`).join('')}</tbody></table><h3>المئين</h3><table class="ft"><thead><tr><th>المئين</th><th>الرجال</th><th>النساء</th></tr></thead><tbody>${T.rock.pct.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>`,
+  run: () => ['m', 'f'].map(s => `<h3>${s === 'm' ? 'الرجال (الجدول 11-15)' : 'النساء (الجدول 11-16)'}</h3><table class="ft"><thead><tr><th>التصنيف</th>${T.runAges.map(a => `<th>${a}</th>`).join('')}</tr></thead><tbody>${T.runCats.map((c, i) => `<tr><td><b>${c}</b></td>${T.run[s][i].map(r => `<td class="en">${r}</td>`).join('')}</tr>`).join('')}</tbody></table>`).join('') + `<p class="muted">المصدر في الكتاب: The Cooper Institute (2007).</p>`,
+  vt1: () => `<table class="ft"><thead><tr><th>الوقت</th><th>السرعة (ميل/ساعة)</th><th>اختبار الحديث</th><th>معدل ضربات القلب</th><th>RPE 1–10</th></tr></thead><tbody>${T.vt1.map(r => `<tr>${r.map(x => `<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+};
+
+/* ================= VIEWS ================= */
+const app = () => $('#app');
+function nav(active) {
+  const tr = S.trainer;
+  $('#brand').innerHTML = `${tr.logo ? `<img src="${tr.logo}" alt="">` : ''}<div><b>ملف العميل للقياسات</b><span>${esc(tr.name || 'منهج NASM-CPT · الفصل 11')}</span></div>`;
+  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.n === active));
+}
+function sexL(s) { return s === 'f' ? 'أنثى' : s === 'm' ? 'ذكر' : '—'; }
+
+function vClients() {
+  nav('clients');
+  const cs = S.clients;
+  app().innerHTML = `<section class="panel"><h1>العملاء</h1>
+    <p class="privacy">🔒 كل البيانات تُحفظ <b>في هذا المتصفح فقط</b> على جهازك، ولا تُرسل لأي خادم. للنسخ الاحتياطي أو النقل لجهاز آخر استخدمي «تصدير». ${S.trainer.name ? '' : '<a href="#/settings">أضيفي اسمك وشعارك أولًا ←</a>'}</p>
+    <form id="newc" class="newc"><input class="f" name="name" placeholder="اسم العميل" required aria-label="اسم العميل"><select class="f" name="sex" required aria-label="الجنس"><option value="">الجنس</option><option value="f">أنثى</option><option value="m">ذكر</option></select><input class="f" name="age" inputmode="numeric" placeholder="العمر" style="width:6em" aria-label="العمر"><button class="btn pri">+ عميل جديد</button></form>
+    <div class="clist">${cs.length ? cs.map(c => { const done = FORMS.filter(f => R[f.id].status(fd(c, f.id)) === 2).length; return `<a class="ccard" href="#/c/${c.id}"><b>${esc(c.name)}</b><span>${sexL(c.sex)} · ${esc(c.age || '—')} سنة</span><span class="prog">${FORMS.map(f => `<i class="s${R[f.id].status(fd(c, f.id))}" title="${f.a}">${f.n}</i>`).join('')}</span><small>${done}/8 مكتمل · ${esc(R.parq.verdict(c.f.parq) || 'لم يبدأ PAR-Q+')}</small></a>`; }).join('') : '<p class="muted">لا يوجد عملاء بعد.</p>'}</div>
+    <div class="row"><button class="btn" id="expAll">⬇ تصدير كل العملاء</button><label class="btn">⬆ استيراد ملف<input type="file" id="imp" accept=".json,application/json" hidden></label></div></section>`;
+  $('#newc').onsubmit = e => { e.preventDefault(); const fdt = new FormData(e.target); const c = { id: uid(), name: fdt.get('name').trim(), sex: fdt.get('sex'), age: fdt.get('age'), created: today(), f: {}, a: [{ id: uid(), date: today(), body: {}, cardio: {} }] }; S.clients.unshift(c); save(1); location.hash = '#/c/' + c.id; };
+  $('#expAll').onclick = () => dl(`clients-${today()}.json`, { app: 'nasm-client-file', v: 1, clients: S.clients });
+  $('#imp').onchange = e => importFile(e.target.files[0]);
+}
+function fd(c, id) { if (id === 'body' || id === 'cardio') { const a = cur(c); return a && a[id]; } return c.f && c.f[id]; }
+function cur(c) { if (!c.a || !c.a.length) c.a = [{ id: uid(), date: today(), body: {}, cardio: {} }]; return c.a.find(x => x.id === c.cur) || c.a[c.a.length - 1]; }
+function dl(name, obj) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+function importFile(file) {
+  if (!file) return; const r = new FileReader();
+  r.onload = () => { try { const j = JSON.parse(r.result); const list = j.clients || (j.client ? [j.client] : []); if (!list.length) throw 0; let n = 0; list.forEach(c => { if (!c.id || !c.name) return; const i = S.clients.findIndex(x => x.id === c.id); if (i >= 0) { if (!confirm(`العميل «${c.name}» موجود. استبداله بالنسخة المستوردة؟`)) return; S.clients[i] = c; } else S.clients.push(c); n++; }); save(1); toast(`تم استيراد ${n}`); route(); } catch (e) { toast('الملف غير صالح', 1); } };
+  r.readAsText(file);
+}
+
+function vClient(c) {
+  nav('clients');
+  const a = cur(c);
+  CTX = { mode: 'edit', c, d: c };
+  app().innerHTML = `<section class="panel"><p class="crumb"><a href="#/">العملاء</a> ‹ ${esc(c.name)}</p>
+    <h1>${esc(c.name)}</h1>
+    <div class="cgrid"><div class="box"><h3>بيانات العميل</h3><div class="grid2">
+      <label>الاسم ${inp('name')}</label><label>الجنس <select class="f" data-k="sex"><option value="">—</option><option value="f"${c.sex === 'f' ? ' selected' : ''}>أنثى</option><option value="m"${c.sex === 'm' ? ' selected' : ''}>ذكر</option></select></label>
+      <label>العمر ${inp('age', { t: 'num' })}</label><label>الهاتف ${inp('phone', { im: 'tel' })}</label>
+      <label>الطول (سم) ${inp('height', { t: 'num' })}</label><label>الوزن (كجم) ${inp('weight', { t: 'num' })}</label>
+      <label class="span2">الهدف ${inp('goal')}</label></div></div>
+    <div class="box"><h3>النماذج بالتسلسل</h3><ol class="flist">${FORMS.map(f => { const s = R[f.id].status(fd(c, f.id)); return `<li><a href="#/c/${c.id}/${f.id}"><span class="fnum s${s}">${f.n}</span><span><b>${f.a}</b><small>${f.s}${f.id === 'parq' && R.parq.verdict(c.f.parq) ? ' · ' + R.parq.verdict(c.f.parq) : ''}</small></span><em>${['لم يبدأ', 'جارٍ', 'مكتمل'][s]}</em></a></li>`; }).join('')}</ol>
+      <p class="muted">النموذجان 3 و4 مرتبطان بتاريخ التقييم: <b>${esc(a.date)}</b> (${c.a.length} تقييم).</p></div></div>
+    <div class="box"><h3>موافقة العميل</h3><p>${CONSENT}</p><div class="grid2"><label>التاريخ ${inp('consent.date', { t: 'date' })}</label>${sig('consent.sig', 'توقيع العميل')}</div></div>
+    <div class="row"><button class="btn pri" id="pall">🖨 طباعة ملف العميل كاملًا</button><button class="btn" id="exp1">⬇ تصدير ملف العميل</button><button class="btn danger" id="del">حذف العميل</button></div></section>
+    <div id="printall" class="printonly"></div>`;
+  bind(() => { if (c.weight || c.height) { } });
+  $('#exp1').onclick = () => dl(`client-${c.name.replace(/\s+/g, '_')}-${today()}.json`, { app: 'nasm-client-file', v: 1, client: c });
+  $('#del').onclick = () => { if (confirm(`حذف «${c.name}» وكل بياناته من هذا المتصفح نهائيًا؟ لا يمكن التراجع. (صدّري الملف أولًا إذا تحتاجينه)`)) { S.clients = S.clients.filter(x => x !== c); save(1); location.hash = '#/'; } };
+  $('#pall').onclick = () => printAll(c);
+}
+const CONSENT = 'أوافق على إجراء تقييمات الصحة واللياقة البدنية الموضحة في هذا الملف، وأقرّ بأن المعلومات التي قدّمتها صحيحة وكاملة حسب علمي. وأوافق على احتفاظ المدرب بهذه المعلومات لغرض تصميم برنامج التمرين ومتابعة التقدم، على أن تبقى سرية ولا تُشارك مع أي طرف دون موافقتي الكتابية.';
+
+function formSheet(c, id, mode, part) {
+  const f = FORMS.find(x => x.id === id);
+  let d;
+  if (mode === 'blank') d = {};
+  else if (id === 'body' || id === 'cardio') { const a = cur(c); d = a[id] || (a[id] = {}); d.date = a.date; }
+  else { c.f[id] = c.f[id] || {}; d = c.f[id]; }
+  CTX = { mode, c, d };
+  return `<article class="sheet${R[id].land ? ' land' : ''}" data-form="${id}">${R[id].body(part)}</article>`;
+}
+function vForm(c, id) {
+  nav('clients');
+  const i = FORMS.findIndex(f => f.id === id), f = FORMS[i];
+  const a = cur(c), isA = id === 'body' || id === 'cardio';
+  app().innerHTML = `<section class="panel np"><p class="crumb"><a href="#/">العملاء</a> ‹ <a href="#/c/${c.id}">${esc(c.name)}</a> ‹ ${f.n}. ${f.a}</p>
+    <nav class="stepper">${FORMS.map(x => `<a href="#/c/${c.id}/${x.id}" class="${x.id === id ? 'on' : ''} s${R[x.id].status(fd(c, x.id))}" title="${x.a}">${x.n}</a>`).join('')}</nav>
+    ${isA ? `<div class="adate">التقييم: <select class="f" id="asel">${c.a.map(x => `<option value="${x.id}"${x === a ? ' selected' : ''}>${x.date}</option>`).join('')}</select> <label>التاريخ <input class="f" type="date" id="adt" value="${a.date}"></label> <button class="btn" id="anew">+ إعادة تقييم جديدة</button></div>` : ''}
+    <div class="row"><button class="btn pri" onclick="window.print()">🖨 طباعة / PDF</button>${i > 0 ? `<a class="btn" href="#/c/${c.id}/${FORMS[i - 1].id}">→ السابق</a>` : ''}${i < 7 ? `<a class="btn" href="#/c/${c.id}/${FORMS[i + 1].id}">التالي ←</a>` : ''}</div></section>
+    ${formSheet(c, id, 'edit')}`;
+  bind(() => R[id].calc && R[id].calc(), () => vForm(c, id));
+  R[id].calc && R[id].calc();
+  if (isA) {
+    $('#asel').onchange = e => { c.cur = e.target.value; save(1); vForm(c, id); };
+    $('#adt').onchange = e => { a.date = e.target.value; save(1); vForm(c, id); };
+    $('#anew').onclick = () => { const n = { id: uid(), date: today(), body: {}, cardio: {} }; c.a.push(n); c.cur = n.id; save(1); vForm(c, id); };
+  }
+}
+function printAll(c) {
+  const html = `<article class="sheet"><header class="sh">${S.trainer.logo || S.trainer.name ? `<div class="tb">${S.trainer.logo ? `<img src="${S.trainer.logo}" alt="">` : ''}<div><b>${esc(S.trainer.name || '')}</b>${S.trainer.title ? `<span>${esc(S.trainer.title)}</span>` : ''}</div></div>` : ''}<div class="st"><span class="fnum">✓</span><div><h2>ملف العميل للقياسات</h2><small>${esc(c.name)} · ${sexL(c.sex)} · ${esc(c.age || '')} سنة</small></div></div></header>
+    <section class="box"><h3>موافقة العميل</h3><p>${CONSENT}</p>${c.consent && c.consent.sig ? `<img class="psig" src="${c.consent.sig}" alt="توقيع">` : ''}<p>التاريخ: ${esc((c.consent && c.consent.date) || '')}</p></section>
+    <section class="box"><h3>ملخص</h3><ul>${FORMS.map(f => `<li>${f.n}. ${f.a}: ${['لم يبدأ', 'جارٍ', 'مكتمل'][R[f.id].status(fd(c, f.id))]}</li>`).join('')}</ul></section>${sheetFoot()}</article>`
+    + FORMS.map(f => formSheet(c, f.id, 'view')).join('');
+  const w = $('#printall'); w.innerHTML = html;
+  ['body', 'cardio'].forEach(id => { CTX = { mode: 'view', c, d: cur(c)[id] || {} }; const el = w.querySelector(`[data-form=${id}]`); if (el) calcIn(el, id); });
+  hydrateSigs(w);
+  document.body.classList.add('pall'); window.print(); window.onafterprint = () => { document.body.classList.remove('pall'); w.innerHTML = ''; window.onafterprint = null; };
+}
+function calcIn(root, id) { R[id].calc(root); }
+
+function vBlank(id) {
+  nav('blank');
+  if (!id) {
+    app().innerHTML = `<section class="panel"><h1>النماذج الفارغة</h1><p>نماذج فارغة بدون أي شعار، للطباعة أو المشاركة. افتحي النموذج ثم «طباعة / PDF»، أو نزّلي ملف PDF الجاهز.</p>
+      <ol class="flist">${BLANKS.map(b => `<li><div class="brow"><span class="fnum">${b.n}</span><span><b>${b.a}</b><small>${b.s}</small></span><span class="acts"><a class="btn" href="#/blank/${b.id}">فتح</a><a class="btn" href="blank/${b.file}.pdf" download>⬇ PDF</a></span></div></li>`).join('')}</ol>
+      <p class="muted">PAR-Q+ مقسوم لملفين: الصفحة الأولى (الأسئلة السبعة + الإقرار)، ثم أسئلة المتابعة + التوصيات + الإقرار، لأن من يجيب «لا» على كل أسئلة الصفحة الأولى لا يحتاج الملف الثاني.</p></section>`;
+    return;
+  }
+  const b = BLANKS.find(x => x.id === id); if (!b) return vBlank();
+  app().innerHTML = `<section class="panel np"><p class="crumb"><a href="#/blank">النماذج الفارغة</a> ‹ ${b.a}</p><div class="row"><button class="btn pri" onclick="window.print()">🖨 طباعة / PDF</button><a class="btn" href="blank/${b.file}.pdf" download>⬇ PDF جاهز</a></div></section>${formSheet(null, b.form, 'blank', b.part)}`;
+}
+const BLANKS = [
+  { id: 'parq1', form: 'parq', part: 1, file: '1a-PAR-Q-page1', n: '1أ', a: 'PAR-Q+ 2020: الصفحة الأولى', s: 'الأسئلة السبعة + إقرار المشارك' },
+  { id: 'parq2', form: 'parq', part: 2, file: '1b-PAR-Q-followup', n: '1ب', a: 'PAR-Q+ 2020: أسئلة المتابعة', s: 'الأسئلة 1–10 + التوصيات + الإقرار' },
+  ...FORMS.slice(1).map(f => ({ id: f.id, form: f.id, file: f.n + '-' + f.id, n: f.n, a: f.a, s: f.s }))
+];
+
+function vTables(id) {
+  nav('tables');
+  if (!id) {
+    app().innerHTML = `<section class="panel"><h1>الجداول المرجعية</h1><p>جداول الفصل 11 كما في <span class="en">${REF}</span>، مع رقم الصفحة في الكتاب العربي. يمكن طباعة أي جدول وحده، أو كلها.</p>
+      <div class="row np"><a class="btn pri" href="#/tables/all">🖨 عرض وطباعة كل الجداول</a></div>
+      <ol class="tlist">${TABLES.map(t => `<li><a href="#/tables/${t.id}"><b>${t.a}</b><small class="en">${t.en}</small><small>الكتاب العربي ${t.ar}</small></a></li>`).join('')}</ol></section>`;
+    return;
+  }
+  const list = id === 'all' ? TABLES : TABLES.filter(t => t.id === id);
+  app().innerHTML = `<section class="panel np"><p class="crumb"><a href="#/tables">الجداول المرجعية</a> ‹ ${id === 'all' ? 'كل الجداول' : list[0].a}</p><div class="row"><button class="btn pri" onclick="window.print()">🖨 طباعة / PDF</button></div></section>` + list.map(t => tblWrap(t, TB[t.id]())).join('');
+}
+
+function vSettings() {
+  nav('settings');
+  const tr = S.trainer;
+  CTX = { mode: 'edit', d: tr };
+  app().innerHTML = `<section class="panel"><h1>إعدادات المدرب</h1><p>يظهر اسمك وشعارك أعلى كل نموذج مطبوع لعملائك. النماذج الفارغة تبقى بدون شعار.</p>
+    <div class="box"><div class="grid2"><label>الاسم / اسم النشاط ${inp('name')}</label><label>المسمى أو الشهادة ${inp('title', { ph: 'مدرب شخصي معتمد' })}</label><label>الهاتف ${inp('phone', { im: 'tel' })}</label><label>البريد ${inp('email', { im: 'email' })}</label></div>
+    <div class="logo"><div class="lprev">${tr.logo ? `<img src="${tr.logo}" alt="الشعار">` : '<span class="muted">لا يوجد شعار</span>'}</div><label class="btn">رفع الشعار (PNG أو JPG)<input type="file" id="logo" accept="image/*" hidden></label>${tr.logo ? '<button class="btn" id="rmlogo">إزالة الشعار</button>' : ''}</div></div>
+    <div class="box"><h3>البيانات</h3><p class="privacy">🔒 كل البيانات في هذا المتصفح فقط. إذا مسحتِ بيانات المتصفح تُحذف، لذلك صدّري نسخة احتياطية بانتظام.</p>
+    <div class="row"><button class="btn" id="expAll2">⬇ تصدير كل البيانات</button><button class="btn danger" id="wipe">حذف كل البيانات من هذا المتصفح</button></div></div></section>`;
+  bind(() => nav('settings'));
+  $('#logo').onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 360 / Math.max(im.width, im.height)); const cv = document.createElement('canvas'); cv.width = im.width * k; cv.height = im.height * k; cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); tr.logo = cv.toDataURL('image/png'); save(1); vSettings(); }; im.src = r.result; }; r.readAsDataURL(f); };
+  const rm = $('#rmlogo'); if (rm) rm.onclick = () => { delete tr.logo; save(1); vSettings(); };
+  $('#expAll2').onclick = () => dl(`client-file-backup-${today()}.json`, { app: 'nasm-client-file', v: 1, trainer: S.trainer, clients: S.clients });
+  $('#wipe').onclick = () => { if (confirm('حذف كل العملاء والإعدادات من هذا المتصفح نهائيًا؟')) { S = { trainer: {}, clients: [] }; save(1); vSettings(); } };
+}
+
+/* ---------- binding ---------- */
+function bind(after, rerender) {
+  $$('[data-k]', app()).forEach(el => {
+    const k = el.dataset.k;
+    const h = () => {
+      let v = el.type === 'checkbox' ? el.checked : el.value;
+      if (el.type === 'radio' && !el.checked) return;
+      set(CTX.d, k, v); save();
+      if (el.tagName === 'TEXTAREA') fit(el);
+      if (el.dataset.re && rerender) { const y = scrollY; rerender(); scrollTo(0, y); return; }
+      if (el.dataset.re && !rerender) { route(); return; }
+      after && after();
+    };
+    el.addEventListener(el.type === 'radio' || el.type === 'checkbox' || el.tagName === 'SELECT' || el.type === 'date' ? 'change' : 'input', h);
+    if (el.tagName === 'TEXTAREA') fit(el);
+  });
+  hydrateSigs(app());
+}
+const fit = t => { t.style.height = 'auto'; t.style.height = Math.max(t.scrollHeight, 40) + 'px'; };
+function hydrateSigs(root) {
+  $$('[data-sig]', root).forEach(box => {
+    const k = box.dataset.sig, cv = box.querySelector('canvas'), img = box.querySelector('img');
+    if (CTX.mode !== 'edit' || !box.closest('#app')) { cv.remove(); return; }
+    const r = box.getBoundingClientRect(); cv.width = r.width * 2 || 600; cv.height = r.height * 2 || 200;
+    const g = cv.getContext('2d'); g.lineWidth = 4; g.lineCap = 'round'; g.strokeStyle = '#1d1a19';
+    let dn = false, last;
+    const pt = e => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) * cv.width / b.width, (e.clientY - b.top) * cv.height / b.height]; };
+    cv.onpointerdown = e => { dn = true; last = pt(e); cv.setPointerCapture(e.pointerId); if (img) img.style.display = 'none'; };
+    cv.onpointermove = e => { if (!dn) return; const p = pt(e); g.beginPath(); g.moveTo(...last); g.lineTo(...p); g.stroke(); last = p; };
+    cv.onpointerup = () => { if (!dn) return; dn = false; set(CTX.d, k, cv.toDataURL('image/png')); save(1); };
+  });
+  $$('[data-sigclear]', root).forEach(b => b.onclick = () => { set(CTX.d, b.dataset.sigclear, ''); save(1); route(); });
+}
+
+/* ---------- router ---------- */
+function route() {
+  const p = location.hash.replace(/^#\/?/, '').split('/');
+  window.scrollTo(0, 0);
+  if (p[0] === 'c' && p[1]) { const c = client(p[1]); if (!c) { location.hash = '#/'; return; } c.f = c.f || {}; return p[2] ? vForm(c, p[2]) : vClient(c); }
+  if (p[0] === 'blank') return vBlank(p[1]);
+  if (p[0] === 'tables') return vTables(p[1]);
+  if (p[0] === 'settings') return vSettings();
+  vClients();
+}
+load(); window.addEventListener('hashchange', route); route();
+</script>
+</body></html>
