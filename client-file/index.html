@@ -128,7 +128,14 @@ td .cb{border:0;padding:0;min-height:28px;background:none}
   .rbar span.on{outline-width:2px}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
-@page land{size:A4 landscape;margin:10mm}.sheet.land{page:land}
+@page land{size:A4 landscape;margin:8mm}.sheet.land{page:land}
+@media print{
+ .sheet.land .sh small,.sheet.land .tb span{display:none}.sheet.land .tb img{max-height:34px}.sheet.land .sh{margin-bottom:2px;padding-bottom:3px}.sheet.land .st h2{font-size:17px}.sheet.land .who{margin-top:2px}
+ .sheet.land .sf{margin-top:4px;padding-top:2px;font-size:9.5px}.sheet.land .box h3{font-size:14px;margin:0 0 2px}.sheet.land .ft{margin:2px 0}.sheet.land .ft th{padding:1px 4px}
+ .sheet[data-form=opt]{font-size:11px}.sheet[data-form=opt] .ft{font-size:11px}.sheet[data-form=opt] .ft td{padding:0 4px;height:19px}.sheet[data-form=opt] .ft td .f{min-height:15px;font-size:11px}
+ .sheet[data-form=opt] .box{padding:3px 8px;margin:3px 0}.sheet[data-form=opt] .box:has(.ft){break-inside:avoid}.sheet[data-form=opt] .ft.opt tr.sec td{padding:1px 4px}.sheet[data-form=opt] textarea.f{min-height:40px}
+ .sheet[data-form=opt] .sh{margin-bottom:4px}.sheet[data-form=opt] .sf{margin-top:4px}
+}
 </style>
 <style media="print" id="landcss"></style>
 </head><body>
@@ -267,11 +274,11 @@ const LIFE = [
 ];
 
 /* ---------- 3. Body composition ---------- */
-const CIRC = [ // sites as in Table 11-5 (book wording)
-  {id:'waist', a:'الخصر', d:'أضيق نقطة للخصر، تحت القفص الصدري وفوق عظام الحوض مباشرة؛ أو عند السرة'},
-  {id:'hips', a:'الوركان', d:'القدمان معًا، أكبر محيط لمنطقة الأرداف'},
+const CIRC = [ // order and wording as in Table 11-5 (English & Arabic book)
   {id:'neck', a:'الرقبة', d:'تحت الحنجرة مباشرة (تفاحة آدم للرجال)'},
   {id:'chest', a:'الصدر', d:'عبر أعرض جزء من الصدر'},
+  {id:'waist', a:'الخصر', d:'أضيق نقطة للخصر، تحت القفص الصدري وفوق عظام الحوض مباشرة؛ أو عند السرة'},
+  {id:'hips', a:'الوركان', d:'القدمان معًا، أكبر محيط لمنطقة الأرداف'},
   {id:'thigh', a:'الفخذ', d:'واقفًا، الرجلان متباعدتان 10 سم، أكبر محيط تحت الطية الألوية'},
   {id:'calf', a:'الربلة', d:'الجزء الأكثر امتلاءً بين الكاحل والركبة'},
   {id:'arm', a:'الذراع (العضلة ذات الرأسين)', d:'الجزء الأكثر امتلاءً عند منتصف المسافة بين الكتف والمرفق'}
