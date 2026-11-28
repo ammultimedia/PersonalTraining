@@ -95,7 +95,7 @@ td .cb{border:0;padding:0;min-height:28px;background:none}
 .hint{background:#fff8dc;border-radius:8px;padding:8px 12px}
 .tip{font-size:13.5px;color:#4b5a6b;background:#f2f6fb;border-radius:8px;padding:6px 10px;margin:8px 0}
 .fn{font-size:12.5px;line-height:1.6;color:#6b3a10;border-top:1px dashed #c58a00;margin:6px 0;padding-top:4px}
-.steps2{display:flex;gap:8px;margin:8px 0}.steps2 span{padding:4px 12px;border-radius:999px;font-size:14px}.steps2 .on{background:var(--red);color:#fff}.steps2 .off{background:#eee;color:#999}
+.h2s{color:var(--blue);font-size:20px;border-top:3px solid var(--blue);padding-top:8px;margin:16px 0 4px}.steps2{display:flex;gap:8px;margin:8px 0}.steps2 span{padding:4px 12px;border-radius:999px;font-size:14px}.steps2 .on{background:var(--red);color:#fff}.steps2 .off{background:#eee;color:#999}
 .sigw{margin:4px 0}.sigl{font-size:14px;margin-bottom:3px}.sig{position:relative;height:110px;border:1.5px dashed #9aa;border-radius:8px;background:#fff;touch-action:none}
 .sig canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}.sig img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
 .psig{height:90px}
@@ -111,6 +111,7 @@ td .cb{border:0;padding:0;min-height:28px;background:none}
   .top,.panel,.np,#toast,.lnk{display:none!important}
   main{padding:0;max-width:none}
   .sheet{box-shadow:none;border-radius:0;padding:0;margin:0;max-width:none;break-after:page}
+  .sf{margin-top:6px;padding-top:3px;font-size:9.5px}.sf p{margin:0}.box h3{margin:0 0 4px;font-size:15px}.grid2,.grid3,.grid4{margin:2px 0;gap:4px 12px}
   .sheet:last-child{break-after:auto}
   .pb{break-after:page}
   body.pall main>*:not(#printall){display:none!important}body.pall #printall{display:block!important}
@@ -124,7 +125,7 @@ td .cb{border:0;padding:0;min-height:28px;background:none}
   .ft td{padding:2px 5px}.ft td .f{min-height:18px;padding:0 2px}td .cb{min-height:0}.ft.grid td.c{padding:0}.ft.sm th.v{height:46px;font-size:9px}.ft.grid td.c input{width:11px;height:11px}.ft.grid td{line-height:1.1}.sheet.land .box{padding:3px 8px;margin:3px 0}
   .ft td small{display:none}.sh{margin-bottom:6px;padding-bottom:6px}.qs>li{padding:4px 0}
   .sig{height:70px;border-style:solid}
-  .tip{background:none;padding:0 0 0 0}
+  .tip{display:none}
   .rbar span.on{outline-width:2px}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -134,6 +135,8 @@ td .cb{border:0;padding:0;min-height:28px;background:none}
  .sheet.land .sf{margin-top:4px;padding-top:2px;font-size:9.5px}.sheet.land .box h3{font-size:14px;margin:0 0 2px}.sheet.land .ft{margin:2px 0}.sheet.land .ft th{padding:1px 4px}
  .sheet[data-form=opt]{font-size:11px}.sheet[data-form=opt] .ft{font-size:11px}.sheet[data-form=opt] .ft td{padding:0 4px;height:19px}.sheet[data-form=opt] .ft td .f{min-height:15px;font-size:11px}
  .sheet[data-form=opt] .box{padding:3px 8px;margin:3px 0}.sheet[data-form=opt] .box:has(.ft){break-inside:avoid}.sheet[data-form=opt] .ft.opt tr.sec td{padding:1px 4px}.sheet[data-form=opt] textarea.f{min-height:40px}
+ .sheet[data-form=dyn] .ft td{padding:1px 4px}.sheet[data-form=dyn] .ft td .f{min-height:14px}.sheet[data-form=dyn] .box{padding:3px 8px;margin:3px 0}.sheet[data-form=dyn] textarea.f{min-height:26px}.sheet[data-form=dyn] .ft{font-size:11.5px}
+ .sheet[data-form=stat] .ft td{padding:1px 4px}.sheet[data-form=stat] .box{padding:3px 8px;margin:3px 0}
  .sheet[data-form=opt] .sh{margin-bottom:4px}.sheet[data-form=opt] .sf{margin-top:4px}
 }
 </style>
@@ -554,7 +557,7 @@ R.parq = {
     }
     const st = parqState(CTX.d);
     let h = sheetHead(f) + `<div class="steps2"><span class="on">الخطوة 1: الأسئلة السبعة</span><span class="${st.done1 && st.anyY ? 'on' : 'off'}">الخطوة 2: أسئلة المتابعة</span></div>` + parqPart1();
-    if (st.done1 && st.anyY) h += `<div class="pb"></div>` + sheetHead({ ...f, a: f.a + ' – أسئلة المتابعة', s: 'PAR-Q+ 2020 · الخطوة 2' }) + parqPart2();
+    if (st.done1 && st.anyY) h += `<h2 class="h2s">الخطوة 2: أسئلة المتابعة</h2>` + parqPart2();
     return h + sheetFoot(PARQ.credit);
   },
   status(d) { if (!d) return 0; const s = parqState(d); if (!s.done1) return 0; if (!s.anyY) return get(d, 'd1.sig') ? 2 : 1; return s.fuDone && get(d, 'd2.sig') ? 2 : 1; },
@@ -723,8 +726,8 @@ R.dyn = {
       });
       h += `</tbody></table></section>`;
     });
-    h += `<section class="box"><p class="muted">لتحديد العضلات مفرطة النشاط (Overactive) أو الخاملة (Underactive)، قارني ملاحظاتك بالرسم البياني لحلول تقييم الوضعية.</p>
-      <label>عضلات مفرطة النشاط ${area('over')}</label><label>عضلات خاملة ${area('under')}</label>
+    h += `<section class="box"><p class="muted np">لتحديد العضلات مفرطة النشاط (Overactive) أو الخاملة (Underactive)، قارني ملاحظاتك بالرسم البياني لحلول تقييم الوضعية.</p>
+      <div class="grid2"><label>عضلات مفرطة النشاط ${area('over')}</label><label>عضلات خاملة ${area('under')}</label></div>
       <p class="tip np">سيُضاف اقتراح العضلات تلقائيًا عند دراسة فصل تقييم الوضعية والحركة (المرحلة 2).</p></section>`;
     return h + sheetFoot();
   },
@@ -741,7 +744,7 @@ R.stat = {
     });
     h += `<section class="box"><h3>هل هناك دليل على متلازمة التشوه القوامي؟</h3><div class="grid3">
       ${chk('pds.l', 'التقعر القطني')}${chk('pds.k', 'التحدب الظهري')}${chk('pds.f', 'متلازمة القدم المسطحة (Pes planus distortion syndrome)')}</div>${inp('pds.n', { ph: 'ملاحظات' })}
-      <label>عضلات يحتمل أن تكون <b>نشطة</b> ${area('over')}</label><label>عضلات يحتمل أن تكون <b>غير نشطة</b> ${area('under')}</label></section>`;
+      <div class="grid2"><label>عضلات يحتمل أن تكون <b>نشطة</b> ${area('over')}</label><label>عضلات يحتمل أن تكون <b>غير نشطة</b> ${area('under')}</label></div></section>`;
     return h + sheetFoot();
   },
   status(d) { return d && Object.keys(d).length > 1 ? 1 : 0; }
@@ -884,8 +887,8 @@ function vForm(c, id) {
 function printAll(c) {
   const html = `<article class="sheet"><header class="sh">${S.trainer.logo || S.trainer.name ? `<div class="tb">${S.trainer.logo ? `<img src="${S.trainer.logo}" alt="">` : ''}<div><b>${esc(S.trainer.name || '')}</b>${S.trainer.title ? `<span>${esc(S.trainer.title)}</span>` : ''}</div></div>` : ''}<div class="st"><span class="fnum">ملف</span><div><h2>ملف العميل للقياسات</h2><small>${esc(c.name)} · ${sexL(c.sex)} · ${esc(c.age || '')} سنة</small></div></div></header>
     <section class="box"><h3>موافقة العميل</h3><p>${CONSENT}</p>${c.consent && c.consent.sig ? `<img class="psig" src="${c.consent.sig}" alt="توقيع">` : ''}<p>التاريخ: ${esc((c.consent && c.consent.date) || '')}</p></section>
-    <section class="box"><h3>ملخص</h3><ul>${FORMS.map(f => `<li>${f.n}. ${f.a}: ${['لم يبدأ', 'جارٍ', 'مكتمل'][R[f.id].status(fd(c, f.id))]}</li>`).join('')}</ul></section>${sheetFoot()}</article>`
-    + FORMS.map(f => formSheet(c, f.id, 'view')).join('');
+    <section class="box"><h3>ملخص</h3><ul>${FORMS.map(f => `<li>${f.n}. ${f.a}: ${['لم يبدأ (غير مطبوع)', 'جارٍ', 'مكتمل'][R[f.id].status(fd(c, f.id))]}</li>`).join('')}</ul></section>${sheetFoot()}</article>`
+    + FORMS.filter(f => R[f.id].status(fd(c, f.id)) > 0).map(f => formSheet(c, f.id, 'view')).join('');
   const w = $('#printall'); w.innerHTML = html;
   ['body', 'cardio'].forEach(id => { CTX = { mode: 'view', c, d: cur(c)[id] || {} }; const el = w.querySelector(`[data-form=${id}]`); if (el) calcIn(el, id); });
   hydrateSigs(w);
